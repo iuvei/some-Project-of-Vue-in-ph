@@ -1,0 +1,229 @@
+<template>
+  <div class="block" >
+    <!-- <span class="demonstration">Click 指示器触发</span> -->
+    <el-carousel trigger="click" height="400px;">
+
+      <div v-for="(items, indexs) in arr_data" :key="indexs" @click="go_active(items)">
+          <el-carousel-item  >
+            <p  style="display:inline-block;width:100%;height:100%;">
+              <img :src="items.pic" alt="lunbo_1" style="width:100%;height:100%;">
+            </p>
+         </el-carousel-item>
+      </div>
+      
+    </el-carousel>
+  </div>
+</template>
+
+<style>
+
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 14px;
+    opacity: 0.75;
+    line-height: 150px;
+    margin: 0;
+  }
+
+  .el-carousel__item:nth-child(2n) {
+     background-color: #99a9bf;
+  }
+  
+  .el-carousel__item:nth-child(2n+1) {
+     background-color: #d3dce6;
+  }
+
+  .el-carousel__container{
+      height: 400px;
+  }
+
+  .el-carousel__item img{
+      cursor: pointer;
+  }
+</style>
+
+<script>
+
+import Vue from 'vue'
+import { Carousel } from 'element-ui'
+import { requestOpt , el_tip} from '../../api/recommend'
+import { messageBox } from 'element-ui';
+Vue.component(Carousel.name, Carousel)
+
+export default {
+  name: 'Promotions',
+  components:{
+
+  },
+  data () {
+    return {
+        arr_data:[],
+    }
+  },
+  methods:{
+      get_data(){
+          this.arr_data = JSON.parse(sessionStorage.getItem('pics'));
+          if(!this.arr_data){
+            requestOpt.reqnoGet('slidings',(res)=>{
+                this.arr_data = res.data.data.list;
+                    sessionStorage.setItem('pics',JSON.stringify(res.data.data.list));
+                    }, (err)=>{
+                     el_tip(err.data.msg)
+            })
+        }
+         
+      },
+      go_active(obj){
+        //    跳往主页
+              if(obj.url == 1){
+                  this.$router.push('/')
+              }
+
+        // 跳往投注页面
+              if(obj.url == '2'){
+                 this.$router.push('/betcenter')
+              }
+              if(obj.url == '2:6'){
+                //   console.log(3)
+                this.$router.push('/betcenter')
+               }
+        // 跳往活动详情页面
+               for(var i = 0; i < obj.url.length; i++){
+                //  console.log(obj.url[obj.url.length -1]);
+                if(obj.url[0] == 6){
+                    this.$router.push('/detail_poromo/' + obj.url[obj.url.length -1]);
+                }
+            }
+            
+        // 跳往开奖页面
+              if(obj.url == '3:1'){
+                 this.$router.push('/lottery/1/CQSSC')
+              }
+              if(obj.url == '3:2'){
+                 this.$router.push('/lottery/2/FC3D')
+              }
+        
+              if(obj.url == '3:5'){
+                 this.$router.push('/lottery/5/BJPK10')
+              }
+              if(obj.url == '3:6'){
+                 this.$router.push('/lottery/6/GD11X5')
+              }
+              if(obj.url == '3:7'){
+                 this.$router.push('/lottery/7/XJSSC')
+              }
+              if(obj.url == '3:8'){
+                 this.$router.push('/lottery/8/AHKS')
+              }
+              if(obj.url == '3:9'){
+                 this.$router.push('/lottery/9/JSKS')
+              }
+        
+              if(obj.url == '3:11'){
+                 this.$router.push('/lottery/11/PL3')
+              }
+              if(obj.url == '3:13'){
+                 this.$router.push('/lottery/13/SFSSC')
+              }
+        
+              if(obj.url == '3:14'){
+                 this.$router.push('/lottery/14/SFPK10')
+              }
+              if(obj.url == '3:15'){
+                 this.$router.push('/lottery/15/SD11X5')
+              }
+              if(obj.url == '3:16'){
+                 this.$router.push('/lottery/16/TJSSC')
+              }
+              if(obj.url == '3:17'){
+                 this.$router.push('/lottery/17/SH11X5')
+              }
+              if(obj.url == '3:18'){
+                 this.$router.push('/lottery/18/JX11X5')
+              }
+              if(obj.url == '3:19'){
+                 this.$router.push('/lottery/19/SHSSL')
+              }
+              if(obj.url == '3:20'){
+                 this.$router.push('/lottery/20/GXKS')
+              }
+              if(obj.url == '3:21'){
+                 this.$router.push('/lottery/21/XY28')
+              }
+              if(obj.url == '3:22'){
+                 this.$router.push('/lottery/22/BJ28')
+              }
+              if(obj.url == '3:23'){
+                 this.$router.push('/lottery/23/XGLHC')
+              }
+        // 跳往走势页面
+         if(obj.url == '4:1:1'){
+                 this.$router.push('/CQSSC/1')
+              }
+              if(obj.url == '4:2:1'){
+                 this.$router.push('/FC3D/2')
+              }
+        
+              if(obj.url == '4:5:1'){
+                 this.$router.push('/BJPK10/5')
+              }
+              if(obj.url == '4:6:1'){
+                 this.$router.push('/GD11X5/6')
+              }
+              if(obj.url == '4:7:1'){
+                 this.$router.push('/XJSSC/7')
+              }
+              if(obj.url == '4:8:1'){
+                 this.$router.push('/AHKS/8')
+              }
+              if(obj.url == '4:9:1'){
+                 this.$router.push('/JSKS/9')
+              }
+        
+              if(obj.url == '4:11:1'){
+                 this.$router.push('/PL3/11')
+              }
+              if(obj.url == '4:13:1'){
+                 this.$router.push('/SFSSC/13')
+              }
+        
+              if(obj.url == '4:14:1'){
+                 this.$router.push('/SFPK10/14')
+              }
+              if(obj.url == '4:15:1'){
+                 this.$router.push('/SD11X5/15')
+              }
+              if(obj.url == '4:16:1'){
+                 this.$router.push('/TJSSC/16')
+              }
+              if(obj.url == '4:17:1'){
+                 this.$router.push('/SH11X5/17')
+              }
+              if(obj.url == '4:18:1'){
+                 this.$router.push('/JX11X5/18')
+              }
+              if(obj.url == '4:19:1'){
+                 this.$router.push('/SHSSL/19')
+              }
+              if(obj.url == '4:20:1'){
+                 this.$router.push('/GXKS/20')
+              }
+              if(obj.url == '4:21:1'){
+                 this.$router.push('/XY28/21')
+              }
+              if(obj.url == '4:22:1'){
+                 this.$router.push('/BJ28/22')
+              }
+              if(obj.url == '4:23:1'){
+                 this.$router.push('/XGLHC/23')
+              }
+           
+           
+      }
+  },
+  mounted(){
+      this.get_data();
+  }
+}
+</script>
+    

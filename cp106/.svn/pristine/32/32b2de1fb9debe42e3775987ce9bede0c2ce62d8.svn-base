@@ -1,0 +1,4645 @@
+<script src="../../../build/build.js"></script>
+<template>
+  <div class="betcenter">
+    <!--<login v-if="show_login" @close="show_login=false"></login>-->
+    <!--show_login=true :loginBool="show_login"-->
+    <TopLoginReg ></TopLoginReg>
+      <!--<TopTab :tabNum="2"></TopTab>-->
+    <!--$router.push('/home')-->
+    <div class="return-home" @click="toHome"><i class="fa fa-home"></i> 回到首页</div>
+    <div class="betcenter-container">
+      <!--广告栏-->
+      <notice :code="code" :pan="pan"></notice>
+      <!--内容区域 start-->
+      <div class="betcenter-content" :style="{height: maxHeight}">
+        <!--left-->
+        <div class="betcenter-con-left">
+          <ul>
+            <li v-for="(item,i) in lottery_sort" >
+              <span @click="togger(i)" :id="'bet_li' + i">{{item.name}}</span>
+              <i class="el-icon-arrow-down" :class="{up: active===i}"></i>
+              <!--具体彩种-->
+              <dl :id="'bet_tab_' + lot.lot_type_id" v-for="(lot, k) in lottery_sort[i].list" v-if="active===i" :class="{lotActive: lot_type_id ==lot.lot_type_id}" @click="toCurrentLot(i,k,lot.lot_type_id,lot.code,lot.name)">
+                <dt><img :src="lot.pic" :alt="lot.name"></dt>
+                <dd>
+                  {{lot.name}}
+                </dd>
+              </dl>
+            </li>
+          </ul>
+        </div>
+        <!--right  v-if="loading_content"-->
+        <div class="betcenter-con-right" v-if="load_con_flag">
+          <div class="betcenter-con-bg">
+            <!--1-->
+            <div class="betcenter-con-right-info">
+              <div class="betcenter-con-right-opt">
+                <dl>
+                  <dt>
+                    <img :src="lot_curr_obj.pic" :alt="lot_curr_obj.name">
+                  </dt>
+                  <dd>
+                    <h2>
+                      {{lot_curr_obj.name}}
+                      <span v-if="is_pan">{{panName}}
+                        <select v-model="pan" @change="chkSelect(pan)" :disabled="bets.length>0">
+                          <option v-for="option in options" :value="option.value">
+                            {{ option.text }}
+                          </option>
+                        </select>
+                      </span>
+                    </h2>
+                    <div class="lot-ansy-btns">
+                      <span @click="hotColdshow('冷热排行','1')">
+                        <i class="fa fa-file-archive-o"></i>
+                        <button>冷热排行</button>
+                      </span>
+                      &nbsp;
+                      <span @click="hotColdshow('遗漏排行','2')">
+                        <i class="fa fa-file-archive-o"></i>
+                        <button>遗漏排行</button>
+                      </span>
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+              <div class="betcenter-con-right-opt">
+                <p class="counter">距 <strong>{{lot_curr_obj.curr_issue_number}}</strong> 期封盘, 还有</p>
+                <div class="timer">
+                  <div class="borderd">
+                    {{h(lot_curr_obj.curr_count_down)}}
+                  </div>
+                  <div class="spice">
+                    <img src="../../image/icon/sep.png" alt="">
+                  </div>
+                  <div class="borderd">
+                    {{m(lot_curr_obj.curr_count_down)}}
+                  </div>
+                  <div class="spice">
+                    <img src="../../image/icon/sep.png" alt="">
+                  </div>
+                  <div class="borderd">
+                    {{s(lot_curr_obj.curr_count_down)}}
+                  </div>
+                </div>
+              </div>
+              <div class="betcenter-con-right-opt">
+                <div class="finished-issue">
+                  <p class="wait-number" v-if="lot_curr_obj.number1==''">
+                    正等待第 <strong>{{lot_curr_obj.issue_number}}</strong> 期开奖 <i></i><i></i><i></i><i></i><i></i><i></i>
+                  </p>
+                  <p class="wait-number" v-else>第 <strong>{{lot_curr_obj.issue_number}}</strong> 期开奖号码</p>
+
+                  <div class="numberX" v-if="lot_type_id==23">
+                    <span class="lot_number" v-if="lot_curr_obj.number1" :data-color="lhc_color(lot_curr_obj.number1)">{{lot_curr_obj.number1}} <span class="lotName">{{lhc_color_formate(lot_curr_obj.number1).text}}</span></span>
+                    <span class="lot_number" v-if="lot_curr_obj.number2" :data-color="lhc_color(lot_curr_obj.number2)">{{lot_curr_obj.number2}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number2).text}}</span></span>
+                    <span class="lot_number" v-if="lot_curr_obj.number3" :data-color="lhc_color(lot_curr_obj.number3)">{{lot_curr_obj.number3}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number3).text}}</span></span>
+                    <span class="lot_number" v-if="lot_curr_obj.number4" :data-color="lhc_color(lot_curr_obj.number4)">{{lot_curr_obj.number4}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number4).text}}</span></span>
+                    <span class="lot_number" v-if="lot_curr_obj.number5" :data-color="lhc_color(lot_curr_obj.number5)">{{lot_curr_obj.number5}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number5).text}}</span></span>
+                    <span class="lot_number" v-if="lot_curr_obj.number6" :data-color="lhc_color(lot_curr_obj.number6)">{{lot_curr_obj.number6}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number6).text}}</span></span>
+                    <span style="font-size: 1.4rem;color: #0047aa;" v-if="lot_curr_obj.number1">+</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number7" :data-color="lhc_color(lot_curr_obj.number7)">{{lot_curr_obj.number7}}  <span class="lotName">{{lhc_color_formate(lot_curr_obj.number7).text}}</span></span>
+                  </div>
+                  <div class="numberX" v-else-if="lot_type_id==22||lot_type_id==21">
+                    <span class="lot_number" v-if="lot_curr_obj.number1">{{lot_curr_obj.number1}}</span>
+                    <span style="position: relative;top: -.3rem;right:.1rem;font-size: 1.4rem;color: #0047aa;" v-if="lot_curr_obj.number1">+</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number2">{{lot_curr_obj.number2}}</span>
+                    <span style="position: relative;top: -.3rem;right:.1rem;font-size: 1.4rem;color: #0047aa;" v-if="lot_curr_obj.number1">+</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number3">{{lot_curr_obj.number3}}</span>
+                    <span style="position: relative;top: -.3rem;right:.1rem;font-size: 1.4rem;color: #0047aa;" v-if="lot_curr_obj.number1">=</span>
+                    <!--:class="{'bg-blue': lhc_color_farmate(lot_curr_obj.number4)==1,'bg-green': lhc_color_farmate(lot_curr_obj.number4)==2}"-->
+                    <span class="lot_number" v-if="lot_curr_obj.number4" >{{lot_curr_obj.number4}}</span>
+                  </div>
+                  <div class="numberX" v-else-if="lot_type_id==8||lot_type_id==9||lot_type_id==20">
+                    <span class="lot_number no-bg" v-if="lot_curr_obj.number1">
+                      <img :src="lot_curr_obj.number1 | ksFilter" alt="">
+                    </span>
+                    <span class="lot_number no-bg" v-if="lot_curr_obj.number2">
+                      <img :src="lot_curr_obj.number2 | ksFilter" alt="">
+                    </span>
+                    <span class="lot_number no-bg" v-if="lot_curr_obj.number3">
+                      <img :src="lot_curr_obj.number3 | ksFilter" alt="">
+                    </span>
+                  </div>
+                  <!--其他-->
+                  <div class="numberX" v-else >
+                    <span class="lot_number" v-if="lot_curr_obj.number1">{{lot_curr_obj.number1}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number2">{{lot_curr_obj.number2}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number3">{{lot_curr_obj.number3}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number4">{{lot_curr_obj.number4}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number5">{{lot_curr_obj.number5}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number6">{{lot_curr_obj.number6}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number7">{{lot_curr_obj.number7}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number8">{{lot_curr_obj.number8}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number9">{{lot_curr_obj.number9}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number10">{{lot_curr_obj.number10}}</span>
+                    <span class="lot_number" v-if="lot_curr_obj.number11">{{lot_curr_obj.number11}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--2-->
+            <div class="betcenter-con-tabs" :class="{lhc_tab: lot_type_id==23}">
+              <ul>
+                <li v-for="(type1,i) in this.plays_tab_pan" :class="{typeActive:p_type==type1.replace(/\d+\|/, '')}" @click="chkType1(type1.replace(/\d+\|/, ''),type1,i)">{{type1.replace(/\d+\|/, '')}}</li>
+              </ul>
+            </div>
+            <!--选号区域-->
+            <div class="betcenter-select-number">
+              <!--left 选号-->
+              <div class="select-number-l">
+                <!--具体的类型-->
+                <div class="betcenter-sub-tabs">
+                  <span class="c-type2" v-for="(item,j) in allname" :class="{ctabsActive: chkCtype==j}" @click="chkType2(j,item.type_name)">{{item.type_name}}</span>
+                </div>
+                <!--具体的号码区块-->
+                <div class="number-zone">
+                  <div class="number-zone-item" v-for="(lotteryRanges,i) in lotteryRanges"
+                       :class="lotteryRanges.className">
+                    <span class="num-zone-label">{{lotteryRanges.type}}</span>
+                    <div class="num-zone-btns">
+                      <!--色波-->
+                      <button v-if="c_type=='色波'" class="num-groupzone-btn" :data-active="item.active" :class="item.className" v-for="(item,k) in lotteryRanges.prams" @click="singleChk(i,k,item.val, lotteryRanges)">
+                        <span class="num-btnDisplayText">{{item.name}}</span>
+                        <span class="num-btnNums" :class="item.className">
+                          <span class="num-btnNum" v-for="(val,i) in item.para">{{val.name}}</span>
+                        </span>
+                        <span class="num-zone-btnRotate">{{parseFloat((rates[k]*rotae_ratio).toFixed(3))}}</span>
+                      </button>
+                      <button v-else class="num-zone-btn" :class="{numActive:item.active,panb: pan==2 || lot_type_id==21 || lot_type_id==22 || lot_type_id==23, spcialBplay: c_type==='龙虎和'&&i===0}" @click="singleChk(i,k,item.val, lotteryRanges)">
+                        {{item.name}}
+                        <!--v-for="(rate,m) in rates"-->
+                        <!--|| lot_type_id==21 || lot_type_id==22-->
+                        <span class="num-zone-btnRotate" v-if="pan==2 || c_type=='特码'|| c_type=='混合'|| c_type=='波色'|| (lot_type_id==23 &&c_type!=='合肖'&&p_type!=='自选不中'&&p_type!=='连码')" >
+                          <span v-if="p_type=='1-5球'">{{parseFloat((rates[i]*rotae_ratio).toFixed(3))}}</span>
+                          <!--(lot_type_id==21 || lot_type_id==22) && c_type=='两面盘'-->
+                          <span v-else-if="lotteryRanges.type=='波色豹子'">{{parseFloat((rates[k+10]*rotae_ratio).toFixed(3))}}</span>
+                          <span v-else-if="c_type==='龙虎和'">
+                            <span v-if="i===1">{{parseFloat((rates[k]*rotae_ratio).toFixed(3))}}</span>
+                          </span>
+                          <span v-else>{{parseFloat((rates[k]*rotae_ratio).toFixed(3))}}</span>
+                        </span>
+                      </button>
+                      <!--no ride -->
+                      <p class="num-zone-rotate-label" v-if="c_type=='特码包三' || c_type=='豹子'">赔率：{{parseFloat((rates[0]*rotae_ratio).toFixed(3))}}</p>
+                      <p class="num-zone-rotate-label" v-if="c_type=='合肖'||p_type=='自选不中'|| p_type=='连码'">
+                        赔率：
+                        <span v-if="c_type==='中二'">{{parseFloat((rates[0]*rotae_ratio).toFixed(3))+'('+c_type+')'+parseFloat((rates[1]*rotae_ratio).toFixed(3))+'(中三)'}}</span>
+                        <span v-else-if="c_type==='中特'">{{parseFloat((rates[0]*rotae_ratio).toFixed(3))+'('+c_type+')'+parseFloat((rates[1]*rotae_ratio).toFixed(3))+'(中二)'}}</span>
+                        <span v-else-if="c_type==='三全中'||c_type==='二全中'||c_type==='特串'||c_type==='四全中'">{{parseFloat((rates[0]*rotae_ratio).toFixed(3))+'('+c_type+')'}}</span>
+                        <span v-else>{{lhc_rate}}</span>
+                      </p>
+                    </div>
+                    <div class="num-other-btns">
+                      <button class="num-other-btn" :disabled="/胆拖/g.test(c_type)||p_type=='任选胆拖' || (p_type=='二同号' && c_type=='单选') || c_type ==='特码包三' || c_type=='合肖' ||p_type=='自选不中'|| p_type=='连码'|| (lotteryRanges.type=='选位'&& c_type ==='龙虎和')" :class="{allActive: all_falg[i]==true}" @click="allChk(i)">全</button>
+                      <button class="num-other-btn" :disabled="p_type=='前中后' || /胆拖/g.test(c_type)|| p_type=='任选胆拖' || (p_type=='二同号' && c_type=='单选') || c_type ==='特码包三' || c_type ==='波色' || c_type ==='豹子' || lotteryRanges.type=='波色豹子' || c_type ==='色波' || c_type=='合肖' ||p_type=='自选不中'|| p_type=='连码'|| p_type=='特肖'|| p_type=='五行'|| c_type=='一肖'|| p_type=='正肖'|| p_type=='7色波'|| /连肖/g.test(c_type)|| c_type=='通选'|| (c_type ==='龙虎和')" :class="{bigActive: big_falg[i]==true}" @click="bigChk(i)">大</button>
+                      <button class="num-other-btn" :disabled="p_type=='前中后' || /胆拖/g.test(c_type)|| p_type=='任选胆拖' || (p_type=='二同号' && c_type=='单选') || c_type ==='特码包三' || c_type ==='波色' || c_type ==='豹子' || lotteryRanges.type=='波色豹子' || c_type ==='色波' || c_type=='合肖' ||p_type=='自选不中'|| p_type=='连码'|| p_type=='特肖'|| p_type=='五行'|| c_type=='一肖'|| p_type=='正肖'|| p_type=='7色波'|| /连肖/g.test(c_type)|| c_type=='通选'|| (c_type ==='龙虎和')" :class="{smallActive: small_falg[i]==true}" @click="smallChk(i)">小</button>
+                      <button class="num-other-btn" :disabled="p_type=='前中后' || /胆拖/g.test(c_type)|| p_type=='任选胆拖' || (p_type=='二同号' && c_type=='单选') || c_type ==='特码包三' || c_type ==='波色' || c_type ==='豹子' || lotteryRanges.type=='波色豹子' || c_type ==='色波' || c_type=='合肖' ||p_type=='自选不中'|| p_type=='连码'|| p_type=='特肖'|| p_type=='五行'|| c_type=='一肖'|| p_type=='正肖'|| p_type=='7色波'|| /连肖/g.test(c_type)|| c_type=='通选'|| (c_type ==='龙虎和')" :class="{evenActive: even_falg[i]==true}" @click="evenChk(i)">奇</button>
+                      <button class="num-other-btn" :disabled="p_type=='前中后' || /胆拖/g.test(c_type)|| p_type=='任选胆拖' || (p_type=='二同号' && c_type=='单选') || c_type ==='特码包三' || c_type ==='波色' || c_type ==='豹子' || lotteryRanges.type=='波色豹子' || c_type ==='色波' || c_type=='合肖' ||p_type=='自选不中'|| p_type=='连码'|| p_type=='特肖'|| p_type=='五行'|| c_type=='一肖'|| p_type=='正肖'|| p_type=='7色波'|| /连肖/g.test(c_type)|| c_type=='通选'|| (c_type ==='龙虎和')" :class="{oddActive: odd_falg[i]==true}" @click="oddChk(i)">偶</button>
+                      <button class="num-other-btn" @click="clearChk(i)">清</button>
+                    </div>
+                  </div>
+                </div>
+                <!--cash count-->
+                <div class="game-cash-card">
+                  金额
+                  <input type="number" min="1" max="99999999" v-model="baseAmount" class="gameCal_baseamount">
+                  <button class="gameCal_unitBtn" data-active="true" disabled>元</button>
+
+                  <span class="gameCal_multiplySpan">倍数</span>
+                  <button class="gameCal_multiplyBtn" @click="mounse2"><i class="fa fa-minus"></i></button>
+                  <input type="number" min="1" max="9999" v-model="bet_count" class="gameCal_mutiply">
+                  <button class="gameCal_multiplyBtn" @click="plus2"><i class="fa fa-plus"></i></button>
+
+                  <span class="gameCal_multiplySpan">追期</span>
+                  <button class="gameCal_multiplyBtn" @click="mounse1"><i class="fa fa-minus"></i></button>
+                  <input type="number" min="0" max="100" v-model="future_issues" class="gameCal_mutiply">
+                  <button class="gameCal_multiplyBtn" @click="plus1"><i class="fa fa-plus"></i></button>
+
+                  <div class="gameCal_ctrlBtns">
+                    <!--add_bet_btn_flag &&-->
+                    <button class="gameCal_ctrlBtn" @click="addBet" :disabled="sumBetNum==0">添加</button>
+                    <!--<button class="gameCal_ctrlBtn">加倍</button>-->
+                    <button class="gameCal_ctrlBtn" @click="selRandow($event)">随机</button>
+                    <button class="gameCal_ctrlBtn_clear" @click="allclearChk">清</button>
+                  </div>
+                </div>
+
+                <!--bet selected-->
+                <div class="game-bet-list">
+                  <div class="game-bet-list-body">
+                    <div class="game-bet-list-item-title">
+                      <div class="bet-title-play">玩法</div>
+                      <div class="bet-title">注数</div>
+                      <div class="bet-title">单注金额</div>
+                      <div class="bet-title">赔率</div>
+                      <div class="bet-title">返点</div>
+                      <div class="bet-title">倍 / 追</div>
+                      <div class="bet-title">金额</div>
+                      <div class="bet-title">
+                        <button :disabled="is_bets" @click="delAllBet">全删</button>
+                      </div>
+                    </div>
+                    <div class="game-bet-list-item-body">
+                      <div class="game-bet-list-item-section" v-for="(bet,i) in bets">
+                        <div class="bet-section-play" >
+                          <p>{{bet.bet_type1}}-{{bet.bet_type2}}</p>
+                          <p>
+                            <!--bets_numberfnTex(bet.bet_numbers1Text)-->
+                            <span v-for="(item,k) in bets_numberfnTex(bet.bet_numbers1Text)" v-if="pan==1">
+                              <!--{{item}}-->
+                              {{bet.bet_numbers1Text.length==1||(item&&bet.bet_numbers1Text.length-1==k)?item:item+' | '}}
+                            </span>
+                            <span v-if="pan==2">{{bet.lotteryPosText?bet.lotteryPosText[0]+'_'+bet.bet_name[0]:''}}</span>
+                          </p>
+                        </div>
+                        <div class="bet-section">
+                          {{bet.lotteryNum}}
+                        </div>
+                        <div class="bet-section">
+                          <input type="text" v-model="bet.unit_price" @blur="update(i, bet.unit_price, bet.lotteryNum, bet.bet_count, bet.future_issues)">
+                        </div>
+                        <div class="bet-section">
+                          {{bet.bet_rate}}
+                        </div>
+                        <div class="bet-section">
+                          {{bet.retrun_li}}%
+                        </div>
+                        <div class="bet-section">
+                          {{bet.bet_count}} / {{bet.future_issues}}
+                        </div>
+                        <div class="bet-section">
+                          {{bet.bet_amount}}
+                        </div>
+                        <div class="bet-section">
+                          <i class="fa fa-close" title="删除" @click="del(i)"></i>
+                        </div>
+
+                      </div>
+                      <div class="game-bet-no-data" v-if="bets.length===0">
+                        <span>
+                          暂无投注项
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--right 开奖结果列表-->
+              <div class="betcenter-wediget">
+                <!--历史记录-->
+                <div class="game-history">
+                  <div class="game-history-header">
+                    <div class="game-history-item">期号</div>
+                    <div class="game-history-item">开奖号</div>
+                  </div>
+                  <div class="game-history-body" v-show="updown">
+                    <div class="game-history-item" v-for="(item,i) in history_list">
+                      <div class="game-history-l">{{item.issue_number}}</div>
+                      <div class="game-history-l">
+                        <p v-if="lot_type_id==23">
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[0])">{{item.res[0]}}</span>
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[1])">{{item.res[1]}}</span>
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[2])">{{item.res[2]}}</span>
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[3])">{{item.res[3]}}</span>
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[4])">{{item.res[4]}}</span>
+                          <span v-if="item.res[0]"  :data-color="lhc_color(item.res[5])">{{item.res[5]}}</span>
+                           <i style="color: #4c4c4c;font-style: normal;font-size: 1rem">+</i>
+                          <span v-if="item.res[0]" :data-color="lhc_color(item.res[6])">{{item.res[6]}}</span>
+                        </p>
+                        <p v-else-if="lot_type_id==22 || lot_type_id==21">
+                          <span  >{{item.res[0]}}</span>
+                          <i style="color: #4c4c4c;font-style: normal;font-size: 1rem">+</i>
+                          <span  >{{item.res[1]}}</span>
+                          <i style="color: #4c4c4c;font-style: normal;font-size: 1rem">+</i>
+                          <span  >{{item.res[2]}}</span>
+                          <i style="color: #4c4c4c;font-style: normal;font-size: 1rem">=</i>
+                          <!--:class="{'bg-blue': lhc_color_farmate(item.res[3])==1,'bg-green': lhc_color_farmate(item.res[3])==2}"-->
+                          <span  >{{item.res[3]}}</span>
+                        </p>
+                        <p v-else-if="lot_type_id==8 || lot_type_id==9 || lot_type_id==20">
+                          <img :src="item.res[0] | ksFilter" alt="">
+                          <img :src="item.res[1] | ksFilter" alt="">
+                          <img :src="item.res[2] | ksFilter" alt="">
+                        </p>
+
+                        <p v-else><span  v-for="(v,j) in item.res">{{v}}</span></p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="game-history-footer">
+                    <div class="game-history-footer-item">
+                      <button class="gameHistory_l" @click="refreshHistory()">
+                        <i class="fa fa-refresh" :class="{refreshActive: refreshFlag}"></i>
+                        <span>刷新</span>
+                      </button>
+                    </div>
+                    <div class="game-history-footer-item">
+                      <button class="gameHistory_m" @click="updown=!updown"><i class="fa" :class="updown?'fa-angle-double-up':'fa-angle-double-down'" style="font-size: 1.2rem"></i></button>
+                    </div>
+                    <div class="game-history-footer-item">
+                      <button class="gameHistory_r" @click="moreHistory">
+                        <i class="fa fa-external-link" style="font-size: 1.2rem"></i>
+                        <span>更多</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!--投注信息-->
+                <div class="ratio-ctrl">
+                  <div>
+                    <div class="ratioCtrl_paragraph">
+                      <div class="ratioCtrl_label">
+                        <p>总注数</p>
+                      </div>
+                      <div class="ratioCtrl_content">
+                        <!--sumBetNum-->
+                        <p>{{result_sum_bet_number}}</p>
+                      </div>
+                    </div>
+                    <div class="ratioCtrl_paragraph">
+                      <div class="ratioCtrl_label">
+                        <p>总金额</p>
+                      </div>
+                      <div class="ratioCtrl_content">
+                        <!-- sumCash-->
+                        <p>{{result_sum_bet_cash}} 元</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="ratioCtrl_paragraph" v-if="pan==1 && lot_type_id!==23&& lot_type_id!==21 && lot_type_id!==22">
+                        <div class="ratioCtrl_label">
+                          <p>当前返点</p>
+                        </div>
+                        <div class="ratioCtrl_content">
+                          <p>{{rotate}}%</p>
+                        </div>
+                      </div>
+                      <!--v-if="pan==1"-->
+                      <div class="ratioCtrl_range" v-if="pan==1 && lot_type_id!==23&& lot_type_id!==21 && lot_type_id!==22">
+                        <div class="ratio_range_box">
+                          <span class="marker_min">0%</span>
+                          <el-slider class="marke_range" v-model="rotate" :min="0" :max="high_rotate" :step="0.1" :range="false" @change="chkRange"></el-slider>
+                          <span class="marker_max">{{high_rotate}}%</span>
+                        </div>
+                      </div>
+                      <div class="ratioCtrl_paragraph" v-if="lot_type_id!==23&& lot_type_id!==21 && lot_type_id!==22">
+                        <div class="ratioCtrl_label">
+                          <p>最高奖金</p>
+                        </div>
+                        <div class="ratioCtrl_content">
+                          <!-- betterHighCash-->
+                          <p>{{result_sum_cash}} 元</p>
+                        </div>
+                      </div>
+                      <div class="ratioCtrl_paragraph" v-if="pan==1 && lot_type_id!==23 && lot_type_id!==21 && lot_type_id!==22">
+                        <div class="ratioCtrl_label">
+                          <p>最高赔率</p>
+                        </div>
+                        <div class="ratioCtrl_content">
+                          <p>{{currRote}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--投注行为-->
+                <div class="betcenter-action">
+                  <div class="betcenter_action_btns">
+                    <button :disabled="sumBetNum==0" data-position="top" class="betcenter_action_btn" @click="immeBetting">立即投注</button>
+                    <button :disabled="is_bets" data-position="bottom" class="betcenter_action_btn" @click="okBet">{{is_bets? '无投注项':'确认投注'}}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <InfoPanel></InfoPanel>
+    <Qiandao></Qiandao>
+    <!--冷热排行-->
+    <modal :title="hank_title" :id="hank_id" :type="hank_type" v-if="hank_flag" @close="closeModal"></modal>
+  </div>
+</template>
+
+<script>
+import TopLoginReg from '../topCommon/topLoginReg'
+import TopTab from '../topCommon/topTab'
+import Modal from './modal'
+import Notice from  './notice'
+import {requestOpt, is_show_lot_pan, chaLotteryNumber,array_contain, el_toask_success, el_toask_error, el_messageBox_warning, el_messageBox_tip, el_toask_warning, getArrayItems, alertip, h_m_s} from  '../../api/recommend'
+import {lotteryRanges, lhc_lot_data_formate} from '../../api/config'
+import InfoPanel from '../topCommon/infoPanel'
+import Qiandao from '../home/qiandao'
+
+export default {
+  name: 'Betcenter',
+  components:{
+    TopLoginReg,
+    TopTab,
+    Notice,
+    Modal,
+    InfoPanel,
+    Qiandao
+  },
+  data () {
+    return {
+      lhc_rate: '----',
+      maxHeight: '600px',
+      lottery_list: [], // 所有彩种
+      lottery_sort: [{
+        name: '热门彩种', flag: 'is_hot', list:[]
+      }, {
+        name: '高频彩', flag: 'hight', list:[]
+      }, {
+        name: '低频彩', flag: 'low', list:[]
+      }, {
+        name: 'PC蛋蛋', flag: 'dandan', list:[]
+      }],
+      active: 0, // 默认 -1 不展开
+      lot_type_id: sessionStorage.getItem('lotId')||1, // 默认选择彩种类型ID 为 1
+      code: 'CQSSC',
+      lotName: '重庆时时彩', // 彩票名称
+      lot_curr_obj: {}, // 当前彩种
+      count_time: '', // 倒计时
+      load_con_flag: false, // 是否显示数据
+      timer: null,
+      timer10: null,
+      play_types: [], // 所有玩法
+      play_types_key: [], // 所有玩法的key
+      plays_tab: [], // 第一层玩法
+      plays_tab_pan: [], // 第一层玩法 分盘
+      plays_tab_panA: [], // 第一层玩法 A盘
+      plays_tab_panB: [], // 第一层玩法 B盘
+      curr_play_obj: {}, // 当前玩法对象
+      p_type: '', // 父玩法
+      all_type: '', // 父玩法全称
+      allname: [], // 当前父玩法 所对应的子集合
+      allname_A: [],
+      allname_B: [],
+      c_type: '', // 子玩法
+      c_id: '', // 子玩法ID
+      chkCtype: 0, // 默认子 第一个
+      number_count: '', //选择号码数量
+      pan: 1, // 默认A盘
+      panName: 'A盘',
+      options: [
+        { text: 'A盘', value: 1 },
+        { text: 'B盘', value: 2 }
+      ],
+      rates: [], // 赔率
+      currRate: '', // 当前赔率
+      highest_rate: '', // 最高赔率
+      lowest_rate: '', // 最低赔率
+      remark : '', // 玩法说明
+      history_list: [], // 历史记录列表
+      lotteryRanges: {}, // 区号
+      target:'', //
+      all_falg: [[false],[false],[false],[false],[false],[false],[false],[false],[false],[false],[false]],
+      big_falg: [[false],[false],[false],[false],[false],[false],[false],[false],[false],[false],[false]],
+      small_falg: [[false],[false],[false],[false],[false],[false],[false],[false],[false],[false],[false]],
+      even_falg: [[false],[false],[false],[false],[false],[false],[false],[false],[false],[false],[false]],
+      odd_falg: [[false],[false],[false],[false],[false],[false],[false],[false],[false],[false],[false]],
+      baseAmount: 2, // price
+      bet_count: 1, // count
+      future_issues: 0, // 追
+      refreshFlag: false, // 刷新标识
+      updown: true, // 上下隐藏标识
+      sumBetNum: 0, // 总投注数
+      sumCash: 0, // 总金额
+      rotate: 0,// 当前返点
+      high_rotate: 0, // 最高返点
+      betterHighCash: 0, // 最高奖金
+      betterHighRote: 0, // 最高赔率
+      currRote: 0, // 当前赔率
+      user: JSON.parse(sessionStorage.getItem('user')),
+      rotae_ratio: sessionStorage.getItem('user')? JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate:JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate, // 赔率比
+//      rotae_ratio: sessionStorage.getItem('user')? JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate:window.proxy_default_rate, // 赔率比
+      activeArr: [], // 投注号容器
+      bets: sessionStorage.getItem('home_lot')?[JSON.parse(sessionStorage.getItem('home_lot'))] : [], // 投注项 列表
+      Bbets: [], // B盘容器
+      Abets: [], // pc蛋蛋 六合彩
+      show_login: false, // 是否显示登录弹层
+      hank_title: '', // 冷热排行标题
+      hank_id: '', // 彩票类型ID
+      hank_type: '', // 冷热类型
+      hank_flag: false, // 是否显示
+      loading_content: false, // 当前彩种是否加载完毕
+      app_config: {} ,// app 相关配置
+    }
+  },
+  computed: {
+    is_pan() { // 是否 拥有 pan
+      return is_show_lot_pan(this.lot_type_id)
+    },
+    result_sum_cash() { // 最高中奖 只跟单价，赔率， 倍数有关
+//      console.log(this.rotae_ratio)
+      return parseFloat((this.baseAmount * this.bet_count * (this.currRote * 1)).toFixed(3))
+//      return (this.baseAmount * this.bet_count * (this.currRote * this.rotae_ratio)).toFixed(2)
+    },
+    result_sum_bet_cash() { // 总投注金额 跟 单价 追期 倍数 注数有关  + bets
+      let single_bet = this.baseAmount * this.sumBetNum * (this.bet_count*(1+this.future_issues)); // 选号单一投注
+      // 从投注项里计算 总投注金额
+      let sum=0;
+      for(let i=0; i<this.bets.length; i++) {
+        sum += this.bets[i].bet_amount
+      }
+      return single_bet+sum
+    },
+    result_sum_bet_number() { // 总投注数量
+      let sum=0;
+      for(let i=0; i<this.bets.length; i++) {
+        sum += this.bets[i].lotteryNum
+      }
+      return this.sumBetNum + sum
+    },
+    add_bet_btn_flag() { // 是否添加
+//        console.log(this.pan)
+      if(this.pan ==1) {
+        return this.activeArr.length===0? true: false
+      } else if(this.pan == 2) {
+          return this.Bbets.length===0? true: false
+      }
+    },
+    is_bets() { // 是否立即投注
+      return this.bets.length==0? true: false
+    }
+
+  },
+  beforeRouteLeave(to, from, next) {
+    sessionStorage.removeItem('lotId')
+    sessionStorage.removeItem('home_lot')
+    this.allclearChk()
+    document.body.style.overflowY = 'auto'
+    clearInterval(this.timer)
+    clearInterval(this.timer10)
+    next()
+  },
+  mounted() {
+    this.$root.bus.$on('isReload', (flag)=>{
+      if (flag) {
+        this.rotae_ratio = JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate
+        this.currRote = parseFloat((this.rotae_ratio * this.allname[0].highest_rate).toFixed(3))
+        console.log(this.rotae_ratio)
+      }
+    })
+    this.$root.bus.$on('isLogin', (flag)=>{
+      if (flag) {
+        this.rotae_ratio = JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate
+        this.currRote = parseFloat((this.rotae_ratio * this.allname[0].highest_rate).toFixed(3))
+        console.log(this.rotae_ratio)
+      }
+    })
+    window.onbeforeunload = function () {
+      sessionStorage.removeItem('lotId')
+      sessionStorage.removeItem('home_lot')
+    }
+console.log(this.rotae_ratio)
+    this.maxHeight = document.body.clientHeight-160 + 'px'
+    document.body.style.overflowY = 'hidden'
+    this.allclearChk()
+    this.getHistoryResult()
+    this.getLotplay()
+    this.getLotteryType()
+//    this.getAPPconfig()
+    this.timer = setInterval(() => {
+      this.lot_curr_obj.curr_count_down--
+      if(this.lot_curr_obj.curr_count_down<=0) {
+        this.getLotList()
+      }
+    },1000)
+    this.timer10 = setInterval(() => {
+      this.getLotList()
+      this.getHistoryResult()
+    },60000)
+    this.get_bet_tab_num();
+//    console.log(this.count_time)
+  },
+  methods: {
+    toHome() { // 返回首页
+      if(this.bets.length>0) {
+        el_messageBox_warning(() => {
+          this.bets = []
+          this.bets.length = 0
+          this.$router.push('/home')
+        }, '返回首页会清除已选注单，是否继续返回？')
+      } else {
+        this.$router.push('/home')
+      }
+
+    },
+    moreHistory() {
+      sessionStorage.setItem('cp_title',this.lotName)
+      this.$router.push('/lottery/'+ this.lot_type_id+'/'+this.code)
+    },
+    lhc_color_formate(name) {
+      for(let i=0;i<lhc_lot_data_formate.length;i++) {
+        if (name === lhc_lot_data_formate[i].val) {
+          return lhc_lot_data_formate[i]
+        }
+      }
+    },
+    lhc_color(name) {
+      for(let i=0;i<lhc_lot_data_formate.length;i++) {
+        if (name === lhc_lot_data_formate[i].val) {
+          return lhc_lot_data_formate[i].color
+        }
+      }
+    },
+    h(val) {
+      return h_m_s.h(val)
+    },
+    m(val) {
+      return h_m_s.m(val)
+    },
+    s(val) {
+      return h_m_s.s(val)
+    },
+    closeModal() {
+      this.hank_flag=false
+      /*document.body.style.overflow = 'scroll'*/
+    },
+    hotColdshow(title,type) {
+      this.hank_title = title
+      this.hank_type = type
+      this.hank_id = this.lot_type_id+''
+      this.hank_flag = true
+    },
+    bets_numberfnTex: function (arr) { // 0: [3,15,18]  0: 26
+      if(!arr) return []
+      let res=[];
+      if (typeof(arr[0]) !== 'object') {
+        res = [arr.join(' ')]
+      } else {
+        for (let i=0; i<arr.length; i++) {
+          if (typeof(arr[i]) === 'object') {
+            res.push(arr[i].join(' '))
+          } else {
+            res.push(arr[i])
+          }
+        }
+      }
+      return res
+    },
+    refreshHistory() {
+      this.refreshFlag = true
+      setTimeout(() => {
+        this.refreshFlag = false
+      },1000)
+      this.getHistoryResult()
+    },
+    togger(i) { // tab 类型切换
+      if (this.active == i) {
+        this.active = -1
+      } else {
+        this.active = i
+      }
+    },
+    allChk(i) { // 全
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+        this.lotteryRanges[i].prams[m].active = true
+      }
+      this.all_falg[i] = true
+      this.big_falg[i] = false
+      this.small_falg[i] = false
+      this.even_falg[i] = false
+      this.odd_falg[i] = false
+    },
+    bigChk(i) { // 大
+      let big = Math.ceil(this.lotteryRanges[i].prams.length/2)-1;// 取中间数
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+        this.lotteryRanges[i].prams[m].active = false
+         if( parseInt(this.lotteryRanges[i].prams[m].name)>parseInt(this.lotteryRanges[i].prams[big].name) || /大/g.test(this.lotteryRanges[i].prams[m].name)) { // 数字 ，含有大 的所有中文
+          this.lotteryRanges[i].prams[m].active = true
+        }
+      }
+      this.big_falg[i] = true
+      this.all_falg[i] = false
+      this.small_falg[i] = false
+      this.even_falg[i] = false
+      this.odd_falg[i] = false
+    },
+    smallChk(i) { // 小
+      let big = Math.ceil(this.lotteryRanges[i].prams.length/2)-1
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+        this.lotteryRanges[i].prams[m].active = false
+        if(parseInt(this.lotteryRanges[i].prams[m].name)<=parseInt(this.lotteryRanges[i].prams[big].name) || /小/g.test(this.lotteryRanges[i].prams[m].name)) { // 数字 ，含有小 的所有中文
+          this.lotteryRanges[i].prams[m].active = true
+        }
+      }
+      this.small_falg[i] = true
+      this.all_falg[i] = false
+      this.big_falg[i] = false
+      this.even_falg[i] = false
+      this.odd_falg[i] = false
+    },
+    evenChk(i) { // 奇
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) { //
+        this.lotteryRanges[i].prams[m].active = false
+        if(/\d/g.test(this.lotteryRanges[i].prams[m].name)&&parseInt(this.lotteryRanges[i].prams[m].name)%2!==0 || /单/g.test(this.lotteryRanges[i].prams[m].name) ) { // 数字 ，含有单 的所有中文
+          this.lotteryRanges[i].prams[m].active = true
+        }
+      }
+      this.even_falg[i] = true
+      this.all_falg[i] = false
+      this.big_falg[i] = false
+      this.small_falg[i] = false
+      this.odd_falg[i] = false
+    },
+    oddChk(i) { // 偶
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+        this.lotteryRanges[i].prams[m].active = false
+        if(parseInt(this.lotteryRanges[i].prams[m].name)%2===0 || /双/g.test(this.lotteryRanges[i].prams[m].name)) { // 数字 ，含有双 的所有中文
+          this.lotteryRanges[i].prams[m].active = true
+        }
+      }
+      this.odd_falg[i] = true
+      this.all_falg[i] = false
+      this.big_falg[i] = false
+      this.small_falg[i] = false
+      this.even_falg[i] = false
+    },
+    clearChk(i) { // 清除
+      this.all_falg[i] = false
+      this.big_falg[i] = false
+      this.small_falg[i] = false
+      this.even_falg[i] = false
+      this.odd_falg[i] = false
+      for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+        this.lotteryRanges[i].prams[m].active = false
+      }
+    },
+    allclearChk() {
+      this.baseAmount = 2
+      this.bet_count = 1
+      this.future_issues = 0
+      console.log(this.lotteryRanges)
+      for(let i=0;i<this.lotteryRanges.length;i++) {
+        this.all_falg[i] = false
+        this.big_falg[i] = false
+        this.small_falg[i] = false
+        this.even_falg[i] = false
+        this.odd_falg[i] = false
+        for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+          this.lotteryRanges[i].prams[m].active = false
+        }
+      }
+    },
+    delAllBet() { // 全删投注项
+      el_messageBox_warning(() => {
+        this.bets = []
+        this.bets.length = 0
+      }, '是否要删除全部注单？')
+    },
+    del(i) { // 单个删除
+      this.bets.splice(i, 1)
+    },
+    update(i,price,num,count,fre) {
+      if(this.bets[i].unit_price < 2 || price=='') {
+        price = 2
+        this.bets[i].unit_price = 2
+      }
+      this.bets[i].bet_amount = price * num * count * (1 + fre)
+    },
+    singleChk(i,k,num,obj) { // 单选号
+      if(this.pan==2) {
+        this.Bretate = parseFloat((this.rates[i] * this.rotae_ratio).toFixed(3)) // B盘赔率
+      }
+      if (this.lotteryRanges[i].prams[k].active) {
+        this.lotteryRanges[i].prams[k].active = false
+        this.all_falg[i] = false
+        this.big_falg[i] = false
+        this.small_falg[i] = false
+        this.even_falg[i] = false
+        this.odd_falg[i] = false
+      } else {
+        this.lotteryRanges[i].prams[k].active = true
+      }
+
+      let s = 0
+      let b = 0
+      let a = 0
+      let e = 0
+      let o = 0
+      let big = Math.ceil(this.lotteryRanges[i].prams.length/2)-1
+      if(!/胆拖/g.test(this.c_type) || !this.p_type=='任选胆拖') {
+        for(let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+          if (this.lotteryRanges[i].prams[m].active) {
+            this.all_falg[i] = false
+            this.big_falg[i] = false
+            this.small_falg[i] = false
+            this.even_falg[i] = false
+            this.odd_falg[i] = false
+            s++
+            // all
+            if (s==this.lotteryRanges[i].prams.length) {
+              this.all_falg[i] = true
+            }else {
+              // big
+              if(parseInt(this.lotteryRanges[i].prams[m].name)>parseInt(this.lotteryRanges[i].prams[big].name) || /大/g.test(this.lotteryRanges[i].prams[m].name)) {
+                b++
+                if ((this.c_type!=='两面'&&this.p_type!=='冠亚军和'&&b==Math.floor(this.lotteryRanges[i].prams.length/2)&&b==s)|| (b==1&&a!==1&&o!==1&&e!==1&&/大/g.test(this.lotteryRanges[i].prams[m].name)) || (this.p_type==='冠亚军和'&&b==Math.ceil(this.lotteryRanges[i].prams.length/2)&&b==s) || (this.c_type==='两面'&&b==5&&s==b)) {
+                  this.big_falg[i] = true
+                }else {
+                  this.big_falg[i] = false
+                }
+              }
+              // small
+              if(parseInt(this.lotteryRanges[i].prams[m].name)<=parseInt(this.lotteryRanges[i].prams[big].name) || /小/g.test(this.lotteryRanges[i].prams[m].name)) {
+                a++
+                if ((this.c_type!=='两面'&&this.p_type!=='冠亚军和'&&a==Math.ceil(this.lotteryRanges[i].prams.length/2)&&s==a)|| (a==1&&b!==1&&e!==1&&o!==1&&/小/g.test(this.lotteryRanges[i].prams[m].name))|| (this.p_type==='冠亚军和'&&a==8&&s==a) || (this.c_type==='两面'&&a==5&&s==a)) {
+                  this.small_falg[i] = true
+                }else {
+                  this.small_falg[i] = false
+                }
+              }
+              // even
+              if ((/\d/g.test(this.lotteryRanges[i].prams[m].name)&&parseInt(this.lotteryRanges[i].prams[m].name)%2 !==0 )|| /单/g.test(this.lotteryRanges[i].prams[m].name)) {
+                e++
+                if((this.c_type!=='两面'&&this.c_type!=='选码'&&!/组选和值/g.test(this.c_type)&&e==Math.floor(this.lotteryRanges[i].prams.length/2)&&s==e)|| (a!==1&&b!==1&&e==1&&o!==1&&/单/g.test(this.lotteryRanges[i].prams[m].name)) || ((this.c_type==='选码' || /组选和值/g.test(this.c_type))&&e==Math.ceil(this.lotteryRanges[i].prams.length/2)&&s==e) || (this.c_type==='两面'&&e==4&&s==e)) {
+                  this.even_falg[i] = true
+                }else {
+                  this.even_falg[i] = false
+                }
+              }
+              // odd
+              if (parseInt(this.lotteryRanges[i].prams[m].name)%2 ===0 || /双/g.test(this.lotteryRanges[i].prams[m].name)) {
+                o++
+                if((this.c_type!=='两面'&&this.c_type!=='选码'&&this.p_type!=='冠亚军和'&&!/组选和值/g.test(this.c_type)&&o==Math.ceil(this.lotteryRanges[i].prams.length/2)&&s==o)|| (a!==1&&b!==1&&e!==1&&o==1&&/双/g.test(this.lotteryRanges[i].prams[m].name)) || ((this.c_type==='选码' || /组选和值/g.test(this.c_type))&&o==Math.floor(this.lotteryRanges[i].prams.length/2)&&s==o) || (this.p_type==='冠亚军和'&&o==9&&s==o) || (this.c_type==='两面'&&o==4&&s==o)) {
+                  this.odd_falg[i] = true
+                }else {
+                  this.odd_falg[i] = false
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (this.c_type ==='特码包三' ) {
+        if (this.activeArr.length>0&&this.activeArr[0].length==3) {
+          let v= this.activeArr[0][Math.floor(Math.random()*this.activeArr[0].length)]
+          for (let i=0;i<obj.prams.length;i++) {
+            if (v===obj.prams[i].val){
+              obj.prams[i].active = false
+            }
+          }
+        }
+      }
+
+      /* 11 选 5*/
+
+      if ((this.p_type=='任选胆拖'&&this.c_type ==='任选二中二')
+        ||(this.p_type=='二码'&&(this.c_type ==='前二组选胆拖' || this.c_type ==='后二组选胆拖') ) ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1[0]===obj.prams[i].val&&num!=arr1[0]){
+                obj.prams[i].active = false
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if ((this.p_type=='任选胆拖'&&this.c_type ==='任选三中三')
+        ||(this.p_type=='三码'
+        &&(this.c_type ==='前三组选胆拖'
+        ||this.c_type ==='中三组选胆拖'
+        ||this.c_type ==='后三组选胆拖'))
+        ||(this.p_type=='三不同号'&&this.c_type ==='胆拖') ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===2&&num!=arr1[0]&&num!=arr1[1]){
+                if (arr1[1]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='任选胆拖'&&this.c_type ==='任选四中四' ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===3&&num!=arr1[0]&&num!=arr1[1]&&num!=arr1[2]){
+                if (arr1[2]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='任选胆拖'&&this.c_type ==='任选五中五' ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===4&&num!=arr1[0]&&num!=arr1[1]&&num!=arr1[2]&&num!=arr1[3]){
+                if (arr1[3]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='任选胆拖'&&this.c_type ==='任选六中五' ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===5&&num!=arr1[0]&&num!=arr1[1]&&num!=arr1[2]&&num!=arr1[3]&&num!=arr1[4]){
+                if (arr1[4]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='自选不中'&&this.c_type ==='自选不中' ) {
+        let arr1 = this.activeArr[0]
+        if(arr1&&arr1.length>0){
+          let rom = arr1[Math.floor(Math.random()*arr1.length)]
+          for (let i=0;i<obj.prams.length;i++) {
+            if (arr1.length===11){
+              if (rom===obj.prams[i].val){
+                obj.prams[i].active = false
+              }
+            }
+          }
+        }
+      }
+
+      if (this.p_type=='任选胆拖'&&this.c_type ==='任选七中五' ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===6&&num!=arr1[0]&&num!=arr1[1]&&num!=arr1[2]&&num!=arr1[3]&&num!=arr1[4]&&num!=arr1[5]){
+                if (arr1[5]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='任选胆拖'&&this.c_type ==='任选八中五' ) {
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1.length===7&&num!=arr1[0]&&num!=arr1[1]&&num!=arr1[2]&&num!=arr1[3]&&num!=arr1[4]&&num!=arr1[5]&&num!=arr1[6]){
+                if (arr1[6]===obj.prams[i].val){
+                  obj.prams[i].active = false
+                }
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if(obj.type=='胆码'&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+
+            }
+            if(obj.type=='拖码'&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+
+      }
+
+      if (this.p_type=='合肖'&&this.c_type ==='合肖' ) {
+        let arr1 = this.activeArr[0]
+        if (arr1 && arr1.length > 0&&arr1.length==11) {
+          let v= this.activeArr[0][Math.floor(Math.random()*this.activeArr[0].length)]
+          for(let i=0,len=obj.prams.length;i<len;i++) {
+            if (v === obj.prams[i].val&&!array_contain(arr1,num)) {
+              obj.prams[i].active = false
+            }
+          }
+        }
+      }
+
+      if (this.p_type=='连码'&&(this.c_type ==='二全中'||this.c_type ==='中特'||this.c_type ==='特串' )) {
+        let arr1 = this.activeArr[0]
+        let v= this.activeArr[0][Math.floor(Math.random()*this.activeArr[0].length)]
+        if (arr1 && arr1.length > 0&&arr1.length==7) {
+          for(let i=0,len=obj.prams.length;i<len;i++) {console.log(num)
+            if (v === obj.prams[i].val&&!array_contain(arr1,num)) {
+              obj.prams[i].active = false
+            }
+          }
+        }
+      }
+
+
+      if ((this.p_type=='二同号'&&this.c_type ==='单选')) {// 快三
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+//          console.log(this.lotteryRanges[0].prams[0].val.substr(0,1))
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if((obj.type=='同号')&&num.substr(0,1)==this.lotteryRanges[0].prams[m].val.substr(0,1)) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+
+            }
+            if((obj.type=='不同号')&&num.substr(0,1)==this.lotteryRanges[1].prams[m].val.substr(0,1)) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+      }
+
+      if ((this.p_type=='二不同号'&&this.c_type ==='胆拖') ) {// 快三
+        let arr1 = this.activeArr[0]
+        let arr2 = this.activeArr[1]
+        if (obj.type=='胆码'){
+          if(arr1&&arr1.length>0){
+            for (let i=0;i<obj.prams.length;i++) {
+              if (arr1[0]===obj.prams[i].val&&num!=arr1[0]){
+                obj.prams[i].active = false
+              }
+            }
+          }
+        }
+
+        for (let i=0;i<this.lotteryRanges.length;i++) {
+          for (let m=0;m<this.lotteryRanges[i].prams.length;m++) {
+            if((obj.type=='胆码')&&num==this.lotteryRanges[0].prams[m].val) {
+              this.lotteryRanges[1].prams[m].active = false
+              if (this.lotteryRanges[0].prams[m].active){
+                this.lotteryRanges[0].prams[m].active = false
+              }else {
+                this.lotteryRanges[0].prams[m].active = true
+              }
+
+            }
+            if((obj.type=='拖码')&&num==this.lotteryRanges[1].prams[m].val) {
+              this.lotteryRanges[0].prams[m].active = false
+            }
+          }
+
+        }
+      }
+    },
+    toCurrentLot(p_i, c_i, id, code,lotName) { // 彩票切换
+      console.log(this.rotae_ratio)
+//      this.rotae_ratio = sessionStorage.getItem('user')? JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate:JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate, // 赔率比
+      this.code = code
+      this.lotName = lotName
+      if(this.bets.length>0) {
+        el_messageBox_warning(() => {
+          this.bets = []
+          this.bets.length = 0
+
+          this.allclearChk()
+          this.pan = 1
+          this.chkCtype = 0
+          this.plays_tab_pan = []
+          this.lot_type_id = id
+
+          this.lot_curr_obj.curr_count_down=''
+          this.lot_curr_obj.number1=''
+          this.lot_curr_obj.number2=''
+          this.lot_curr_obj.number3=''
+          this.lot_curr_obj.number4=''
+          this.lot_curr_obj.number5=''
+          this.lot_curr_obj.number6=''
+          this.lot_curr_obj.number7=''
+          this.lot_curr_obj.number8=''
+          this.lot_curr_obj.number9=''
+          this.lot_curr_obj.number10=''
+          this.lot_curr_obj.number11=''
+//      this.lot_curr_obj = this.lottery_sort[p_i].list[c_i]
+          this.formatLot(this.play_types_key)
+          this.getHistoryResult()
+          this.getLotList()
+          this.chkSelect(1)
+        }, '切换彩种会清除已选注单，是否确定切换？')
+        return false
+      } else {
+        this.allclearChk()
+        this.pan = 1
+        this.chkCtype = 0
+        this.plays_tab_pan = []
+        this.lot_type_id = id
+        this.lot_curr_obj.curr_count_down=''
+        this.lot_curr_obj.number1=''
+        this.lot_curr_obj.number2=''
+        this.lot_curr_obj.number3=''
+        this.lot_curr_obj.number4=''
+        this.lot_curr_obj.number5=''
+        this.lot_curr_obj.number6=''
+        this.lot_curr_obj.number7=''
+        this.lot_curr_obj.number8=''
+        this.lot_curr_obj.number9=''
+        this.lot_curr_obj.number10=''
+        this.lot_curr_obj.number11=''
+//      this.lot_curr_obj = this.lottery_sort[p_i].list[c_i]
+        this.formatLot(this.play_types_key)
+        this.getHistoryResult()
+        this.getLotList()
+        this.chkSelect(1)
+      }
+    },
+    chkType1(name, allname,i) { // 父玩法
+      this.allclearChk()
+//      this.rotae_ratio = sessionStorage.getItem('user')? JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate:JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate, // 赔率比
+      this.p_type = name
+      this.chkCtype = 0
+      this.allname = this.curr_play_obj[allname]
+//console.log(this.allname)
+
+      this.highest_rate = this.allname[0].highest_rate * this.rotae_ratio
+      this.lowest_rate = this.allname[0].lowest_rate * this.rotae_ratio
+      this.rates = this.allname[0].rates
+      this.c_type = this.allname[0].type_name
+      this.currRote = this.rates&&this.rates.length>0?parseFloat(this.rates[0].toFixed(3)):parseFloat(this.highest_rate.toFixed(3)) // 默认当前赔率等于最高赔率
+      this.betterHighCash = this.currRote*this.baseAmount // 默认最高奖金
+      this.high_rotate = Math.floor((this.highest_rate-this.lowest_rate)/this.highest_rate*100)
+      this.remark = this.allname[0].remark
+      this.number_count = this.allname[0].number_count
+      this.c_id = this.allname[0].id
+      console.log(this.remark)
+      this.target = chaLotteryNumber(this.p_type, this.allname[0].type_name, this.lot_type_id)
+      this.lotteryRanges=lotteryRanges[this.target]
+    },
+    chkType2(i,name) {// 子玩法
+      this.allclearChk()
+      this.chkCtype = i
+//      this.rotae_ratio = window.return_ratio_rate?window.return_ratio_rate:window.proxy_default_rate
+console.log(name, i)
+      this.c_type = name
+      this.highest_rate = this.allname[i].highest_rate * this.rotae_ratio
+      this.lowest_rate = this.allname[i].lowest_rate * this.rotae_ratio
+      this.rates = this.allname[i].rates
+      this.c_type = this.allname[i].type_name
+      this.currRote = this.rates&&this.rates.length>0?parseFloat(this.rates[i].toFixed(3)):parseFloat(this.highest_rate.toFixed(3)) // 默认当前赔率等于最高赔率
+      this.betterHighCash = this.currRote*this.baseAmount // 默认最高奖金
+      this.high_rotate = Math.floor((this.highest_rate-this.lowest_rate)/this.highest_rate*100)
+      this.remark = this.allname[i].remark
+      this.number_count = this.allname[i].number_count
+      this.c_id = this.allname[i].id
+//console.log(this.remark)
+      this.target = chaLotteryNumber(this.p_type, this.c_type, this.lot_type_id)
+      console.log(this.target)
+      this.lotteryRanges=lotteryRanges[this.target]
+    },
+    chkSelect(pan) { // 选择盘
+    //   console.log(this.play_types)
+      /*if(this.bets.length>0) {
+        el_messageBox_warning((res) => {
+//          this.bets = []
+          console.log(res)
+        }, '换盘会清空投注项，您确定换盘吗？')
+        return false
+      }*/
+
+//      this.rotae_ratio = window.return_ratio_rate?window.return_ratio_rate:window.proxy_default_rate
+      this.pan = pan
+      this.chkCtype = 0
+      if(pan==1) {
+        this.panName = 'A盘'
+        this.plays_tab_pan = this.plays_tab_panA
+        this.p_type = this.plays_tab_panA[0].replace(/\d+\|/,'')
+        this.allname = this.curr_play_obj[this.plays_tab_panA[0]]
+      } else {
+        this.panName = 'B盘'
+        this.plays_tab_pan = this.plays_tab_panB
+        this.p_type = this.plays_tab_panB[0].replace(/\d+\|/,'')
+        this.allname = this.curr_play_obj[this.plays_tab_panB[0]]
+      }
+
+      this.c_type = this.allname[0].type_name
+
+      this.highest_rate = this.allname[0].highest_rate * this.rotae_ratio
+      this.lowest_rate = this.allname[0].lowest_rate * this.rotae_ratio
+      this.rates = this.allname[0].rates
+      this.currRote = parseFloat(this.highest_rate.toFixed(3)) // 默认当前赔率等于最高赔率
+      this.betterHighCash = this.currRote*this.baseAmount // 默认最高奖金
+      this.high_rotate = Math.floor((this.highest_rate-this.lowest_rate)/this.highest_rate*100)
+      this.remark = this.allname[0].remark
+      this.number_count = this.allname[0].number_count
+      this.c_id = this.allname[0].id
+      this.target = chaLotteryNumber(this.p_type, this.allname[0].type_name, this.lot_type_id)
+      this.lotteryRanges=lotteryRanges[this.target]
+
+      this.allclearChk()
+
+//      console.log(this.allname)
+    },
+    mounse1() {// 追 减
+      if(this.future_issues===0) {
+        this.future_issues=0
+        return
+      }
+      --this.future_issues
+
+    },
+    mounse2() {// 倍 减
+      if(this.bet_count===1) {
+        this.bet_count=1
+        return
+      }
+      --this.bet_count
+
+    },
+    plus1() {// 追 加
+      if (this.future_issues>=100) {
+        this.future_issues = 100
+        return
+      }
+      ++this.future_issues
+    },
+    plus2() {// 倍 加
+      ++this.bet_count
+//        console.log(this.bet_count)
+    },
+    chkRange() { // 返点
+      if(this.rotate === this.high_rotate) {
+        this.currRote = parseFloat(this.lowest_rate.toFixed(3))
+      } else if (this.rotate === 0){
+        this.currRote = parseFloat(this.highest_rate.toFixed(3))
+      } else {
+        this.currRote = parseFloat((this.highest_rate*(100-this.rotate) / 100).toFixed(3))
+      }
+      this.betterHighCash = this.currRote*this.baseAmount
+    },
+    formatLot(keys) {
+      this.allname_A = []
+      this.allname_B = []
+      this.plays_tab_panA = []
+      this.plays_tab_panB = []
+      // keys[21].replace(/^(\d{1,})\|.*/,'$1')  23|香港六合彩|XGLHC   -> 23
+      let curr_key; // 当前key
+      for (let i=0;i<keys.length;i++) {
+        if(this.lot_type_id == keys[i].replace(/^(\d{1,})\|.*/,'$1')){
+          curr_key = keys[i]
+        }
+      }
+      this.curr_play_obj = this.play_types[curr_key];// 得到当前彩票类型ID 所对应的 玩法对象
+
+      this.plays_tab = Object.keys(this.curr_play_obj) // 获取父玩法组成数组
+      let values = Object.values(this.curr_play_obj) // 获取父玩法 的values
+      for (let i=0;i<values.length;i++) { // 分盘 二维数组
+        if (this.pan == values[i][0].pan) {
+          this.plays_tab_panA.push(this.plays_tab[i])
+          this.allname_A.push(values[i])
+        } else {
+          this.plays_tab_panB.push(this.plays_tab[i])
+          this.allname_B.push(values[i])
+        }
+      }
+      this.plays_tab_pan = this.plays_tab_panA
+
+      // 默认选择第一个
+      let p = this.plays_tab_pan[0]
+      // 37 | 五星  ->  五星
+      this.all_type = this.plays_tab_pan[0] // 完整的key
+      this.p_type = p.replace(/\d+\|/,'')
+      // 五星直选复式
+      this.allname = this.curr_play_obj[this.all_type]
+      this.c_type = this.curr_play_obj[p][0].type_name
+      // 赔率
+      this.highest_rate = this.curr_play_obj[p][0].highest_rate * this.rotae_ratio
+      this.lowest_rate = this.curr_play_obj[p][0].lowest_rate * this.rotae_ratio
+      this.rates = this.curr_play_obj[p][0].rates
+      this.currRote = parseFloat(this.highest_rate.toFixed(3)) // 默认当前赔率等于最高赔率
+      this.betterHighCash = this.currRote*this.baseAmount // 默认最高奖金
+      this.high_rotate = Math.floor((this.highest_rate-this.lowest_rate)/this.highest_rate*100)
+//      console.log(this.high_rotate)
+
+      this.remark = this.curr_play_obj[p][0].remark
+      this.number_count = this.curr_play_obj[p][0].number_count
+      this.c_id = this.curr_play_obj[p][0].id
+
+      this.target = chaLotteryNumber(this.p_type, this.c_type, this.lot_type_id)
+      this.lotteryRanges=lotteryRanges[this.target]
+      this.allclearChk()
+//        console.log(this.c_id)
+//      console.log(this.play_types)
+//        console.log(values)
+    },
+    getLotList() { // 供定时器使用
+      requestOpt.reqnoGet('betting_list_v1', res => {
+        if(res.data.status===1) {
+          let list = res.data.data.list
+          for (let i=0,len=list.length;i<len;i++) {
+            if(list[i].lot_type_id == this.lot_type_id) {
+              this.lot_curr_obj = list[i]
+            }
+          }
+        }
+      },err => {
+        console.log(err)
+      })
+    },
+    getLotteryType() { // 获取彩票开奖结果 请求一次
+      requestOpt.reqnoGet('betting_list_v1', res => {
+        if (res.data.status === 1) {
+          this.load_con_flag = true
+          this.lottery_list = res.data.data.list
+//          window.sessionStorage.setItem('lot_list', JSON.stringify(this.lottery_list))
+          for (let i=0,len=this.lottery_list.length;i<len;i++) {
+            if (this.lottery_list[i].is_hot) { // hot
+              this.lottery_sort[0].list.push(this.lottery_list[i])
+            }
+            if (this.lottery_list[i].frequency==0 && !/28/g.test(this.lottery_list[i].code)) { // 高频
+              this.lottery_sort[1].list.push(this.lottery_list[i])
+            } else if (this.lottery_list[i].frequency==1 && !/28/g.test(this.lottery_list[i].code)){ // 低频
+              this.lottery_sort[2].list.push(this.lottery_list[i])
+            }
+            if (/28/g.test(this.lottery_list[i].code)) { // pc蛋蛋
+              this.lottery_sort[3].list.push(this.lottery_list[i])
+            }
+            if(this.lottery_list[i].lot_type_id == this.lot_type_id) {
+              this.lot_curr_obj = this.lottery_list[i]
+            }
+          }
+        }
+
+//        console.log(this.lottery_list)
+      },err => {
+        console.log(err)
+      })
+    },
+    getLotplay() { // 获取彩票玩法
+      requestOpt.reqnoGet('play_types', res => {
+        this.play_types = res.data.data.list  // 全部的类型玩法  object
+        // 获取所有玩法的key
+        let keys = Object.keys(this.play_types)
+        this.play_types_key = keys
+        this.formatLot(keys)
+//        console.log(this.play_types)
+      },err => {
+        console.log(err)
+      })
+    },
+    getHistoryResult() { // lottery_results
+      requestOpt.reqnoGet('lottery_results/'+this.lot_type_id, res => {
+        if (res.data.status===1) {
+          this.history_list = res.data.data.list
+        }
+
+//        console.log(this.history_list)
+      },err => {
+        console.log(err)
+      })
+    },
+    selRandow(e) { //随机选号
+      if(!this.lotteryRanges) return;
+      this.allclearChk()
+      console.log(this.number_count,this.c_type,this.p_type)
+      // 判断选几个号
+      switch (this.number_count) {
+        case 1:
+          // 时时彩
+          if (this.c_type === '定位胆' || this.c_type === '1-5球' || this.c_type === '前中后') {
+            this.lotteryRanges[Math.floor(Math.random()* ( this.lotteryRanges.length))].prams[Math.floor(Math.random()* ( this.lotteryRanges[0].prams.length))].active = true
+          } else if (this.c_type === '两面盘') {
+            if (this.lot_type_id == '5' || this.lot_type_id == '14'){
+              let len = Math.floor(Math.random()* ( this.lotteryRanges.length))
+              this.lotteryRanges[len].prams[Math.floor(Math.random()* ( 4))].active = true
+            }
+            else{ // 时时彩
+              let len = Math.floor(Math.random()*(this.lotteryRanges.length))
+
+              if (len===0) {
+                this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+              } else {
+                this.lotteryRanges[len].prams[Math.floor(Math.random()*(this.lotteryRanges[1].prams.length))].active = true
+              }
+            }
+
+          } else if (this.p_type=='1-10名'&&this.c_type ==='1-10名') {
+            let len = Math.floor(Math.random()*(this.lotteryRanges.length))
+            this.lotteryRanges[len].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active =true
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+          }
+          break
+        case 2:
+          // 时时彩
+          if (this.p_type =='任选二'&&this.c_type ==='直选复式') {
+            let newArr = getArrayItems(this.lotteryRanges,2)
+            for (let a=0; a< this.lotteryRanges.length; a++) {
+              if (
+                this.lotteryRanges[a] == newArr[0] || this.lotteryRanges[a] == newArr[1]) {
+                this.lotteryRanges[a].prams[Math.floor(Math.random()*9)].active = true
+              }
+            }
+         } else if(this.p_type =='任选二'&&(this.c_type === '前二组选复式'||this.c_type === '后二组选复式')){
+            for (let i=0,len=2; i < len; i++) {
+              this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+            }
+          } else if(this.p_type== '任选二'&& this.c_type === '五选二直选和值') {
+            this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+          } else if(( this.p_type =='任选三'&&(this.c_type === '前三组三复式'||this.c_type ==='后三组三复式'))
+            || (this.p_type== '二码'&&(this.c_type === '前二组选复式'|| this.c_type ==='后二组选复式'))
+            || (this.p_type== '任选复式'&&this.c_type ==='任选二中二')
+            || (this.p_type== '三星'&&(this.c_type ==='组三复式'))
+            || (this.p_type == '二星' &&(this.c_type ==='前二组选' || this.c_type === '后二组选'))
+            || (this.p_type == '不定位' && (this.c_type === '二码不定位' || this.c_type === '一码不定位'))
+            || (this.p_type == '二不同号' && (this.c_type === '标准'))
+            || (this.p_type == '合肖' && (this.c_type === '合肖'))
+            || (this.p_type == '连码' && (this.c_type === '二全中' || this.c_type === '中特' || this.c_type === '特串'))
+            || (this.p_type == '连肖连尾' && (this.c_type === '二连肖' || this.c_type === '二连尾'))) { // 1 选 2
+
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 2)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0] || this.lotteryRanges[0].prams[a] == newArr[1]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if ((this.p_type == '任选胆拖' && this.c_type === '任选二中二')
+            || (this.p_type == '二码' && (this.c_type === '前二组选胆拖' || this.c_type === '后二组选胆拖') )
+            || (this.p_type == '二码' && (this.c_type === '前二直选复式' || this.c_type === '后二直选复式'))
+            || (this.p_type=='前二'&&(this.c_type ==='直选复式'))) {
+            /!*number1*!/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 1)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else if ((this.p_type == '二同号' && this.c_type === '单选')
+            || (this.p_type == '二不同号' && this.c_type === '胆拖')) {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 1)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val.substr(0, 1)) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val.substr(0, 1)) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          }
+          else if (this.p_type == '任选四' && (this.c_type === '前四组选6' || this.c_type === '后四组选6')) {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 2)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0] || this.lotteryRanges[0].prams[a] == newArr[1]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+          }
+
+          break
+        case 3:
+          if (this.c_type === '前三组选六'
+            || this.c_type === '后三组选六'
+            || this.c_type === '前三组选复式'
+            || this.c_type === '中三组选复式'
+            || this.c_type === '后三组选复式'
+            || (this.p_type == '任选复式' && this.c_type === '任选三中三')
+            || (this.p_type == '三星' && (this.c_type === '组六复式'))
+            || (this.p_type == '任选三' && (this.c_type === '前三组六复式' || this.c_type === '后三组六复式'))
+            || (this.p_type == '三星' && (this.c_type === '后三组选六' || this.c_type === '前三组选六' ))
+            || (this.p_type == '三不同号' && (this.c_type === '标准' ))
+            || (this.p_type == '特码' && (this.c_type === '特码包三' ))
+            || (this.p_type == '连码' && (this.c_type === '中二' || this.c_type === '三全中'))
+            || (this.p_type == '连肖连尾' && (this.c_type === '三连肖' || this.c_type === '三连尾'))) { // 组三 组选 组六 1 选 3
+
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 3)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0] || this.lotteryRanges[0].prams[a] == newArr[1] || this.lotteryRanges[0].prams[a] == newArr[2]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+
+          } else if (this.c_type === '前三组选三复式'
+            || this.c_type === '后三组选三复式'
+            || (this.p_type == '三星' && (this.c_type === '后三组选三' || this.c_type === '前三组选三' ))) { // 组三 1 选 2
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 2)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0] || this.lotteryRanges[0].prams[a] == newArr[1]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选三' && this.c_type === '直选复式') {
+            if (this.lot_type_id == '1'
+              || this.lot_type_id == '16'
+              || this.lot_type_id == '13'
+              || this.lot_type_id == '7'
+              || this.lot_type_id == '12') {
+              let newArr = getArrayItems(this.lotteryRanges,3)
+              for (let a=0; a< this.lotteryRanges.length; a++) {
+                if (
+                  this.lotteryRanges[a] == newArr[0] || this.lotteryRanges[a] == newArr[1]|| this.lotteryRanges[a] == newArr[2]) {
+                  this.lotteryRanges[a].prams[Math.floor(Math.random()*9)].active = true
+                }
+              }
+            } else {
+              this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+              this.lotteryRanges[1].prams[Math.floor(Math.random()*(this.lotteryRanges[1].prams.length))].active = true
+              this.lotteryRanges[2].prams[Math.floor(Math.random()*(this.lotteryRanges[2].prams.length))].active = true
+              this.lotteryRanges[3].prams[Math.floor(Math.random()*(this.lotteryRanges[3].prams.length))].active = true
+              this.lotteryRanges[4].prams[Math.floor(Math.random()*(this.lotteryRanges[4].prams.length))].active = true
+            }
+
+          }
+          else if (this.p_type == '任选三'&&this.c_type ==='五选三直选和值'
+            || (this.p_type == '任选三'&&(this.c_type === '前四直选和值'||this.c_type ==='后四直选和值'))) {
+            this.lotteryRanges[0].prams[Math.floor(Math.random()*(this.lotteryRanges[0].prams.length))].active = true
+          } else if((this.p_type== '任选胆拖' &&this.c_type ==='任选三中三') ||(this.p_type=='三码'
+            &&(this.c_type ==='前三组选胆拖'
+            || this.c_type === '中三组选胆拖'
+            || this.c_type === '后三组选胆拖'))
+            || (this.p_type == '三不同号' && this.c_type === '胆拖')
+            || (this.p_type == '两面盘' && this.c_type === '龙虎和')) {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 2)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else if ((this.p_type == '三码'
+            && (this.c_type === '前三直选复式' || this.c_type === '中三直选复式' || this.c_type === '后三直选复式'))
+            || (this.p_type == '前三' && this.c_type === '直选复式') ) {
+            let r1 = Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))
+            let a1 = this.lotteryRanges[0].prams[r1].val
+            this.lotteryRanges[0].prams[r1].active = true
+
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== a1) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+            /*number3与number1,2不能重合*/
+            let res3 = []
+            for (let a = 0; a < this.lotteryRanges[2].prams.length; a++) {
+              if (this.lotteryRanges[2].prams[a].val !== a1 && this.lotteryRanges[2].prams[a].val !== res2[rom].val) {
+                res3.push(this.lotteryRanges[2].prams[a])
+              }
+            }
+            let rom1 = Math.floor(Math.random() * (res3.length))
+            for (let a = 0; a < this.lotteryRanges[2].prams.length; a++) {
+              if (this.lotteryRanges[2].prams[a].val == res3[rom1].val) {
+                this.lotteryRanges[2].prams[a].active = true
+              }
+            }
+
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+          }
+          break
+        case 4:
+          if ((this.p_type == '任选复式' && this.c_type === '任选四中四')
+            || (this.p_type == '连码' && (this.c_type === '四全中'))
+            || (this.p_type == '连肖连尾' && (this.c_type === '四连肖' || this.c_type === '四连尾'))
+            || (this.p_type === '任选四' && (this.c_type === '前四组选24' || this.c_type === '后四组选24'))) {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 4)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选四' && this.c_type === '直选复式') {
+            let newArr = getArrayItems(this.lotteryRanges, 4)
+            for (let a = 0; a < this.lotteryRanges.length; a++) {
+              if (this.lotteryRanges[a] == newArr[0] || this.lotteryRanges[a] == newArr[1] || this.lotteryRanges[a] == newArr[2] || this.lotteryRanges[a] == newArr[3]) {
+                this.lotteryRanges[a].prams[Math.floor(Math.random() * 9)].active = true
+              }
+            }
+          } else if (this.p_type == '任选胆拖' && this.c_type === '任选四中四') {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 3)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[2].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else if (this.p_type === '任选四' && (this.c_type === '前四组选12' || this.c_type === '后四组选12')) {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            let newArr = getArrayItems(this.lotteryRanges[1].prams, 2)
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a] == newArr[0]
+                || this.lotteryRanges[1].prams[a] == newArr[1]) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+          }
+          else if (this.p_type === '任选四' && (this.c_type === '前四组选4' || this.c_type === '后四组选4')) {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+            this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+          }
+
+          break
+        case 5:
+          if ((this.p_type == '任选复式' && this.c_type === '任选五中五')
+            || (this.p_type == '连肖连尾' && (this.c_type === '五连肖' || this.c_type === '五连尾'))) {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 5)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选胆拖' && this.c_type === '任选五中五') {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 4)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[2].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[3].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+            this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+            this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+          }
+
+          break
+        case 6:
+          if ((this.p_type == '任选复式' && this.c_type === '任选六中五')
+            || this.c_type === '自选不中') {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 6)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]
+                || this.lotteryRanges[0].prams[a] == newArr[5]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选胆拖' && this.c_type === '任选六中五') {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 5)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[2].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[3].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[4].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+            this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+            this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+            this.lotteryRanges[5].prams[Math.floor(Math.random() * (this.lotteryRanges[5].prams.length))].active = true
+          }
+
+          break
+        case 7:
+          if ((this.p_type == '任选复式' && this.c_type === '任选七中五')) {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 7)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]
+                || this.lotteryRanges[0].prams[a] == newArr[5]
+                || this.lotteryRanges[0].prams[a] == newArr[6]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选胆拖' && this.c_type === '任选七中五') {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 6)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]
+                || this.lotteryRanges[0].prams[a] == newArr[5]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[2].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[3].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[4].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[5].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else if (this.c_type === '普通投注') {
+            if (this.lot_type_id == '10') {
+              let newArr = getArrayItems(this.lotteryRanges[0].prams, 6)
+              for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+                if (this.lotteryRanges[0].prams[a] == newArr[0]
+                  || this.lotteryRanges[0].prams[a] == newArr[1]
+                  || this.lotteryRanges[0].prams[a] == newArr[2]
+                  || this.lotteryRanges[0].prams[a] == newArr[3]
+                  || this.lotteryRanges[0].prams[a] == newArr[4]
+                  || this.lotteryRanges[0].prams[a] == newArr[5]) {
+                  this.lotteryRanges[0].prams[a].active = true
+                }
+              }
+              this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            }
+            else if (this.lot_type_id == '4') {
+              let newArr = getArrayItems(this.lotteryRanges[0].prams, 5)
+              for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+                if (this.lotteryRanges[0].prams[a] == newArr[0]
+                  || this.lotteryRanges[0].prams[a] == newArr[1]
+                  || this.lotteryRanges[0].prams[a] == newArr[2]
+                  || this.lotteryRanges[0].prams[a] == newArr[3]
+                  || this.lotteryRanges[0].prams[a] == newArr[4]) {
+                  this.lotteryRanges[0].prams[a].active = true
+                }
+              }
+
+              let newArr1 = getArrayItems(this.lotteryRanges[1].prams, 2)
+              for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+                if (this.lotteryRanges[1].prams[a] == newArr1[0]
+                  || this.lotteryRanges[1].prams[a] == newArr1[1]) {
+                  this.lotteryRanges[1].prams[a].active = true
+                }
+              }
+            }
+
+          }
+          else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+            this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+            this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+            this.lotteryRanges[5].prams[Math.floor(Math.random() * (this.lotteryRanges[5].prams.length))].active = true
+            this.lotteryRanges[6].prams[Math.floor(Math.random() * (this.lotteryRanges[6].prams.length))].active = true
+          }
+
+          break
+        case 8:
+          if ((this.p_type == '任选复式' && this.c_type === '任选八中五')) {
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 8)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]
+                || this.lotteryRanges[0].prams[a] == newArr[5]
+                || this.lotteryRanges[0].prams[a] == newArr[6]
+                || this.lotteryRanges[0].prams[a] == newArr[7]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+          } else if (this.p_type == '任选胆拖' && this.c_type === '任选八中五') {
+            /*number1*/
+            let newArr = getArrayItems(this.lotteryRanges[0].prams, 7)
+            for (let a = 0; a < this.lotteryRanges[0].prams.length; a++) {
+              if (this.lotteryRanges[0].prams[a] == newArr[0]
+                || this.lotteryRanges[0].prams[a] == newArr[1]
+                || this.lotteryRanges[0].prams[a] == newArr[2]
+                || this.lotteryRanges[0].prams[a] == newArr[3]
+                || this.lotteryRanges[0].prams[a] == newArr[4]
+                || this.lotteryRanges[0].prams[a] == newArr[5]
+                || this.lotteryRanges[0].prams[a] == newArr[6]) {
+                this.lotteryRanges[0].prams[a].active = true
+              }
+            }
+            /*number2与number1不能重合*/
+            let res2 = []
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val !== newArr[0].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[1].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[2].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[3].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[4].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[5].val
+                && this.lotteryRanges[1].prams[a].val !== newArr[6].val) {
+                res2.push(this.lotteryRanges[1].prams[a])
+              }
+            }
+            let rom = Math.floor(Math.random() * (res2.length))
+            for (let a = 0; a < this.lotteryRanges[1].prams.length; a++) {
+              if (this.lotteryRanges[1].prams[a].val == res2[rom].val) {
+                this.lotteryRanges[1].prams[a].active = true
+              }
+            }
+
+          } else {
+            this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+            this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+            this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+            this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+            this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+            this.lotteryRanges[5].prams[Math.floor(Math.random() * (this.lotteryRanges[5].prams.length))].active = true
+            this.lotteryRanges[6].prams[Math.floor(Math.random() * (this.lotteryRanges[6].prams.length))].active = true
+            this.lotteryRanges[7].prams[Math.floor(Math.random() * (this.lotteryRanges[7].prams.length))].active = true
+          }
+
+          break
+        case 9:
+          this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+          this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+          this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+          this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+          this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+          this.lotteryRanges[5].prams[Math.floor(Math.random() * (this.lotteryRanges[5].prams.length))].active = true
+          this.lotteryRanges[6].prams[Math.floor(Math.random() * (this.lotteryRanges[6].prams.length))].active = true
+          this.lotteryRanges[7].prams[Math.floor(Math.random() * (this.lotteryRanges[7].prams.length))].active = true
+          this.lotteryRanges[8].prams[Math.floor(Math.random() * (this.lotteryRanges[8].prams.length))].active = true
+          break
+        default:
+          this.lotteryRanges[0].prams[Math.floor(Math.random() * (this.lotteryRanges[0].prams.length))].active = true
+          this.lotteryRanges[1].prams[Math.floor(Math.random() * (this.lotteryRanges[1].prams.length))].active = true
+          this.lotteryRanges[2].prams[Math.floor(Math.random() * (this.lotteryRanges[2].prams.length))].active = true
+          this.lotteryRanges[3].prams[Math.floor(Math.random() * (this.lotteryRanges[3].prams.length))].active = true
+          this.lotteryRanges[4].prams[Math.floor(Math.random() * (this.lotteryRanges[4].prams.length))].active = true
+          this.lotteryRanges[5].prams[Math.floor(Math.random() * (this.lotteryRanges[5].prams.length))].active = true
+          this.lotteryRanges[6].prams[Math.floor(Math.random() * (this.lotteryRanges[6].prams.length))].active = true
+          this.lotteryRanges[7].prams[Math.floor(Math.random() * (this.lotteryRanges[7].prams.length))].active = true
+          this.lotteryRanges[8].prams[Math.floor(Math.random() * (this.lotteryRanges[8].prams.length))].active = true
+          this.lotteryRanges[9].prams[Math.floor(Math.random() * (this.lotteryRanges[9].prams.length))].active = true
+          break
+      }
+    },
+    immeBetting() { // 立即投注
+      if (!sessionStorage.getItem('user')) {
+        this.$root.bus.$emit('sendData',true)
+        return
+      } else {
+        this.addBet()
+      }
+    },
+    okBet() {
+      if(!sessionStorage.getItem('user')) {
+        this.$root.bus.$emit('sendData',true)
+        return false;
+      }
+
+        console.log(this.lhc_rate)
+      if(this.sumBetNum !== 0) {
+        el_messageBox_tip('请点击 <span style="color:#ff0021;font-weight: 700;">立即投注</span> 按钮或者  <span style="color:#ff0021;font-weight: 700;">添加</span> 按钮或者  <span style="color:#ff0021;font-weight: 700;">清除投注号码区域！</span>')
+        return
+      }
+      let param = {
+        issue_number: this.lot_curr_obj.curr_issue_number,
+        screen_shot: '1',
+        bet_amounts: this.result_sum_bet_cash,
+        bets: this.bets
+      }
+      console.log(param)
+      requestOpt.reqPost('lottery_record', JSON.parse(sessionStorage.getItem('user')).token ,param, res => {
+        if (res.data.status===1) {
+          this.bets = []
+          this.send_yu_e();
+          el_toask_success('恭喜你，投注成功')
+        } else {
+          if (res.data.code == -1 || res.data.code == -2 || res.data.code == -3 ) {
+            sessionStorage.removeItem('user')
+            setTimeout(() => {
+              this.$root.bus.$emit('sendData', true)
+            },300)
+          } else {
+            /*if (res.data.code === 10001) {
+              let info=''
+              if(this.user.userinfo.is_trial){
+                info = '余额不足！试玩账号不能充值哦！'
+                el_toask_warning(info)
+
+              } else {
+                info = '余额不足！是否去充值？'
+
+              }
+            } else {
+
+            }*/
+          }
+          console.log(res.data.msg)
+          el_toask_error(res.data.msg)
+        }
+      }, (err) => {
+          console.log(err)
+//        el_toask_error(err)
+      });
+    },
+    addBet() { // 添加投注
+      if (this.c_type !=='定位胆') { // 不是定位胆的二维数组才可以将二维替换一维
+        if (this.activeArr.length===1) {
+          this.activeArr = this.activeArr[0]
+        }
+      }
+//      this.rotae_ratio = window.return_ratio_rate?window.return_ratio_rate:window.proxy_default_rate
+
+      if (this.lotteryPosText.length>0) {
+        for (let m=0;m<this.lotteryPosText.length;m++) {
+          if (this.lotteryPosText[m]=='第一位') {
+            this.lotteryPosText[m] = 1
+          } else if (this.lotteryPosText[m]=='第二位') {
+            this.lotteryPosText[m] = 2
+          } else if (this.lotteryPosText[m]=='第三位') {
+            this.lotteryPosText[m] = 3
+          } else if (this.lotteryPosText[m]=='第四位') {
+            this.lotteryPosText[m] = 4
+          } else if (this.lotteryPosText[m]=='第五位') {
+            this.lotteryPosText[m] = 5
+          } else if (this.lotteryPosText[m]=='第六位') {
+            this.lotteryPosText[m] = 6
+          }
+        }
+      }
+      let single_second = {}
+      if (this.p_type!=='总肖'
+        &&this.p_type!=='7色波'
+        &&this.p_type!=='正肖'
+        &&this.p_type!=='平特一肖尾数'
+        &&this.p_type!=='五行'
+        &&this.p_type!=='正码1-6'
+        &&this.p_type!=='正码特'
+        &&this.p_type!=='正码'
+        &&this.p_type!=='头尾数'
+        &&this.p_type!=='特肖'
+        &&this.p_type!=='色波'
+        &&this.p_type!=='特码A'
+        &&this.p_type!=='特码B'
+        &&this.p_type!=='混合'
+        &&this.p_type!=='波色'
+        &&this.c_type!=='特码') {
+        single_second = {
+          lot_type_id: this.lot_type_id, // 彩票类型ID
+          play_type_id:this.c_id,// 子 彩票玩法ID
+          bet_numbers1: /胆拖/g.test(this.c_type)||/胆拖/g.test(this.p_type)||this.c_type=='普通投注'||(this.p_type=='二同号'&&this.c_type=='单选')||(this.p_type=='任选四'&&(this.c_type=='前四组选12'||this.c_type=='后四组选12'))||(this.p_type==='任选四'&&(this.c_type==='前四组选4'||this.c_type==='后四组选4'))?this.activeArr[0]:this.c_type=='通选'?[]:(this.p_type=='前一'&&this.c_type=='直选复式')?[this.activeArr]:this.activeArr,// 彩票投注号码数组  按位投注二维[[1,2],[3,4]]  一般投注一维[1,2,3]
+          bet_numbers2: /胆拖/g.test(this.c_type)||/胆拖/g.test(this.p_type)||this.c_type=='普通投注'||(this.p_type=='二同号'&&this.c_type=='单选')||(this.p_type=='任选四'&&(this.c_type=='前四组选12'||this.c_type=='后四组选12'))||(this.p_type==='任选四'&&(this.c_type==='前四组选4'||this.c_type==='后四组选4'))?this.activeArr[1]:this.c_type=='通选'?[]:this.lotteryPosCode, // 彩票投注号码数组[拖码数组或位置数组]
+          bet_amount: this.baseAmount * this.sumBetNum * (this.bet_count*(1+this.future_issues)),//投注金额
+          bet_count: this.bet_count,//投注倍数
+          bet_rate: (this.p_type=='合肖'||this.p_type=='自选不中')?this.lhc_rate:this.currRote,//投注赔率
+          future_issues: this.future_issues,//追期数【范围0-50】
+          unit_price: this.baseAmount,//单注彩票金额
+
+          bet_type1: this.p_type,
+          bet_type2: this.c_type,
+          retrun_li: this.rotate,
+          lotteryNum: this.sumBetNum,
+          lotteryPosText: this.c_type=='通选'?[this.p_type+this.c_type]:this.lotteryPosText,
+          bet_numbers1Text:this.bet_numbers1Text
+        }
+      } else {
+//          console.log(this.Abets)
+        single_second = this.Abets
+        /*for (let i=0;i<this.Abets.length;i++){
+          this.Abets[i].bet_amount = this.result_sum_bet_cash
+          this.Abets[i].bet_count = this.bet_count
+          this.Abets[i].future_issues = this.future_issues
+          this.Abets[i].unit_price = this.baseAmount
+
+        }*/
+      }
+      if (this.pan==1) {
+        console.log(single_second)
+        if((this.p_type=='特码'&&this.c_type=='特码') || this.c_type=='波色' || this.c_type=='混合'|| (this.lot_type_id==23 && (this.c_type !=='合肖' && this.p_type !=='连肖连尾' && this.p_type!=='自选不中'&& this.p_type !=='连码')) ){
+          this.bets= single_second.concat(this.bets)
+        }else {
+          this.bets.unshift(single_second)
+        }
+
+//        this.activeArr.length = 0
+        this.allclearChk()
+//        console.log(single_second)
+      } else if (this.pan==2) {
+        for (let i=0;i<this.Bbets.length;i++){
+          /*this.Bbets[i].bet_amount = (this.baseAmount*this.bet_count*this.future_issues+this.bet_count*this.baseAmount)*1
+          this.Bbets[i].bet_count = this.bet_count
+          this.Bbets[i].future_issues = this.future_issues
+          this.Bbets[i].unit_price = this.baseAmount*/
+          if (this.Bbets[i].bet_numbers2[0]==='第一球') {
+            this.Bbets[i].bet_numbers2[0] = 1
+          } else if (this.Bbets[i].bet_numbers2[0]==='第二球') {
+            this.Bbets[i].bet_numbers2[0] = 2
+          } else if (this.Bbets[i].bet_numbers2[0]==='第三球') {
+            this.Bbets[i].bet_numbers2[0] = 3
+          } else if (this.Bbets[i].bet_numbers2[0]==='第四球') {
+            this.Bbets[i].bet_numbers2[0] = 4
+          } else if (this.Bbets[i].bet_numbers2[0]==='第五球') {
+            this.Bbets[i].bet_numbers2[0] = 5
+          }
+        }
+        console.log(this.Bbets)
+        this.bets= this.Bbets.concat(this.bets)
+        this.allclearChk()
+      }
+    },
+    getAPPconfig() {
+      requestOpt.reqnoGet('config', res => {
+        if (res.data.status === 1) {
+          this.app_config = res.data.data.config
+          window.proxy_default_rate = res.data.data.config.proxy_default_rate
+          window.sessionStorage.setItem('app_config', JSON.stringify(this.app_config))
+          console.log(this.app_config)
+        }
+      }, err => {
+        console.log(err)
+      })
+    },
+    get_bet_tab_num(){
+
+        this.$root.bus.$on('send_bet_tab_num',(obj)=>{
+            setTimeout(()=>{
+              this.toCurrentLot(obj.p_i, obj.c_i, obj.id, obj.code , obj.lotName);
+              $('#bet_tab_' + obj.id).trigger('click');
+              console.log(obj.p_i);
+            //   $('#bet_li' + obj.p_i).trigger('click');
+              this.togger(obj.p_i);
+            },300)
+        });
+    },
+    // 刷新余额
+    send_yu_e(){
+      this.$root.bus.$emit('send_yu_e_late',true);
+    },
+
+  },
+  watch: {
+    lotteryRanges:{
+      handler:function(val,oldval){
+        // 检验集合是否存在，防止越权
+        if (!val) return
+
+        if (this.pan==1) { // A 盘
+          let arr=[]  // val
+          let arrNumText = [] // name
+
+          let sumA=0 // 总投注数
+          let tem_obj = {}
+          let tem_arr = []
+
+          // 判断有几位
+          switch (this.number_count) {
+            case 1:
+              if (this.c_type ==='定位胆'|| this.c_type ==='1-5球') { // 时时彩
+                if(this.lot_type_id=='5'||this.lot_type_id=='14') {
+                  arr[0]=[]
+                  arr[1]=[]
+                  arr[2]=[]
+                  arr[3]=[]
+                  arr[4]=[]
+                  arr[5]=[]
+                  arr[6]=[]
+                  arr[7]=[]
+                  arr[8]=[]
+                  arr[9]=[]
+
+                  arrNumText[0]=[]
+                  arrNumText[1]=[]
+                  arrNumText[2]=[]
+                  arrNumText[3]=[]
+                  arrNumText[4]=[]
+                  arrNumText[5]=[]
+                  arrNumText[6]=[]
+                  arrNumText[7]=[]
+                  arrNumText[8]=[]
+                  arrNumText[9]=[]
+                }
+                else if (this.lot_type_id=='19'
+                  ||this.lot_type_id=='2'
+                  ||this.lot_type_id=='11') {
+                  arr[0]=[]
+                  arr[1]=[]
+                  arr[2]=[]
+
+                  arrNumText[0]=[]
+                  arrNumText[1]=[]
+                  arrNumText[2]=[]
+                }
+                else {
+                  arr[0]=[]
+                  arr[1]=[]
+                  arr[2]=[]
+                  arr[3]=[]
+                  arr[4]=[]
+
+                  arrNumText[0]=[]
+                  arrNumText[1]=[]
+                  arrNumText[2]=[]
+                  arrNumText[3]=[]
+                  arrNumText[4]=[]
+                }
+
+              } else if (this.c_type ==='前中后') {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+              } else if (this.c_type ==='两面盘') {
+                if(this.lot_type_id=='5'||this.lot_type_id=='14') {
+                  arr[0]=[]
+                  arr[1]=[]
+                  arr[2]=[]
+                  arr[3]=[]
+                  arr[4]=[]
+                  arr[5]=[]
+                  arr[6]=[]
+                  arr[7]=[]
+                  arr[8]=[]
+                  arr[9]=[]
+
+                  arrNumText[0]=[]
+                  arrNumText[1]=[]
+                  arrNumText[2]=[]
+                  arrNumText[3]=[]
+                  arrNumText[4]=[]
+                  arrNumText[5]=[]
+                  arrNumText[6]=[]
+                  arrNumText[7]=[]
+                  arrNumText[8]=[]
+                  arrNumText[9]=[]
+                } else {
+                  arr[0]=[]
+                  arr[1]=[]
+                  arr[2]=[]
+                  arr[3]=[]
+                  arr[4]=[]
+                  arr[5]=[]
+
+                  arrNumText[0]=[]
+                  arrNumText[1]=[]
+                  arrNumText[2]=[]
+                  arrNumText[3]=[]
+                  arrNumText[4]=[]
+                  arrNumText[5]=[]
+                }
+
+              } else {
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              }
+              break
+            case 2:
+              // 时时彩
+              if (this.p_type=='任选二'&&this.c_type ==='直选复式') {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+              } else if((this.p_type=='任选二'
+                &&(this.c_type ==='前二组选复式'||this.c_type ==='后二组选复式'||this.c_type ==='五选二直选和值'))
+                || (this.p_type=='任选三'&&(this.c_type ==='前三组三复式'||this.c_type ==='后三组三复式'))
+                || (this.p_type=='二码'&&(this.c_type ==='前二组选复式'||this.c_type ==='后二组选复式'))
+                || (this.p_type=='任选复式'&&this.c_type ==='任选二中二')
+                ||(this.p_type=='三星'&&(this.c_type ==='组三复式'|| this.c_type ==='组六复式'))
+                ||(this.p_type=='二星'&&(this.c_type ==='前二组选'|| this.c_type ==='后二组选'))
+                || (this.p_type=='不定位'&&(this.c_type ==='二码不定位'|| this.c_type ==='一码不定位'))
+                || (this.p_type=='二不同号'&&(this.c_type ==='标准'))
+                || (this.p_type=='合肖'&&(this.c_type ==='合肖'))
+                || (this.p_type=='连码')
+                || (this.p_type=='连肖连尾')
+                || (this.p_type=='任选四'&&(this.c_type ==='前四组选6' || this.c_type ==='后四组选6'))){
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              }
+
+              break
+            case 3:
+              if(this.c_type==='前三组选三复式'
+                || this.c_type==='后三组选三复式'
+                || this.c_type==='前三组选六'
+                || this.c_type==='后三组选六'
+                || this.c_type ==='前三组选复式'
+                || this.c_type ==='中三组选复式'
+                || this.c_type ==='后三组选复式'
+                || (this.p_type=='三星'&&(this.c_type ==='组六复式'))
+                || (this.p_type=='任选三'&&(this.c_type ==='五选三直选和值' ))
+                || (this.p_type=='任选三'&&(this.c_type ==='前三组六复式'||this.c_type ==='后三组六复式'))
+                || (this.p_type=='任选三'&&(this.c_type ==='前四直选和值'||this.c_type ==='后四直选和值'))
+                || (this.p_type=='三星'&&(this.c_type ==='后三组选三'|| this.c_type ==='前三组选三' ))
+                || (this.p_type=='三星'&&(this.c_type ==='后三组选六'|| this.c_type ==='前三组选六' ))
+                || (this.p_type=='三不同号'&&(this.c_type ==='标准' ))
+                || (this.p_type=='特码'&&(this.c_type ==='特码包三' ))
+                || (this.p_type=='连码')
+                || (this.p_type=='连肖连尾')
+                ||(this.p_type=='任选复式'&&this.c_type ==='任选三中三')) { // 组三
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else if (this.p_type=='任选三'&&this.c_type ==='直选复式') {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+              } else if ((this.p_type=='三码'&&(this.c_type ==='前三组选胆拖'
+                ||this.c_type ==='中三组选胆拖'
+                ||this.c_type ==='后三组选胆拖'))
+                ||(this.p_type=='任选胆拖'&&this.c_type ==='任选三中三')
+                || (this.p_type == '两面盘' && this.c_type === '龙虎和')) { // 胆拖
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              }
+              else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+              }
+
+              break
+            case 4:
+              if ((this.p_type=='任选复式'&&this.c_type ==='任选四中四')
+                || (this.p_type=='连码')
+                || (this.p_type=='连肖连尾')
+                || (this.p_type==='任选四'&&(this.c_type==='前四组选24'||this.c_type==='后四组选24'))) {
+                arr[0]=[]
+//
+                arrNumText[0]=[]
+              } else if (this.p_type=='任选四'&&this.c_type ==='直选复式') {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+              } else if ((this.p_type=='任选胆拖'&&this.c_type ==='任选四中四')
+                ||(this.p_type==='任选四'&&(this.c_type==='前四组选12'||this.c_type==='后四组选12'))
+                ||(this.p_type==='任选四'&&(this.c_type==='前四组选4'||this.c_type==='后四组选4'))) {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              } else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+              }
+
+              break
+            case 5:
+              if ((this.p_type=='任选复式'&&this.c_type ==='任选五中五')
+                || (this.p_type=='连肖连尾')) {
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else if ((this.p_type=='任选胆拖'&&this.c_type ==='任选五中五')) {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              } else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+              }
+
+              break
+            case 6:
+              if ((this.p_type=='任选复式'&&this.c_type ==='任选六中五')
+                || this.c_type ==='自选不中') {
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else if ((this.p_type=='任选胆拖'&&this.c_type ==='任选六中五')) {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              } else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+                arr[5]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+                arrNumText[5]=[]
+              }
+
+              break
+            case 7:
+              if ((this.p_type=='任选复式'&&this.c_type ==='任选七中五')) {
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else if ((this.p_type=='任选胆拖'&&this.c_type ==='任选七中五')) {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              } else if (this.c_type ==='普通投注') {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              }
+              else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+                arr[5]=[]
+                arr[6]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+                arrNumText[5]=[]
+                arrNumText[6]=[]
+              }
+
+              break
+            case 8:
+              if ((this.p_type=='任选复式'&&this.c_type ==='任选八中五')) {
+                arr[0]=[]
+
+                arrNumText[0]=[]
+              } else if ((this.p_type=='任选胆拖'&&this.c_type ==='任选八中五')) {
+                arr[0]=[]
+                arr[1]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+              } else {
+                arr[0]=[]
+                arr[1]=[]
+                arr[2]=[]
+                arr[3]=[]
+                arr[4]=[]
+                arr[5]=[]
+                arr[6]=[]
+                arr[7]=[]
+
+                arrNumText[0]=[]
+                arrNumText[1]=[]
+                arrNumText[2]=[]
+                arrNumText[3]=[]
+                arrNumText[4]=[]
+                arrNumText[5]=[]
+                arrNumText[6]=[]
+                arrNumText[7]=[]
+
+              }
+
+              break
+            case 9:
+              arr[0]=[]
+              arr[1]=[]
+              arr[2]=[]
+              arr[3]=[]
+              arr[4]=[]
+              arr[5]=[]
+              arr[6]=[]
+              arr[7]=[]
+              arr[8]=[]
+
+              arrNumText[0]=[]
+              arrNumText[1]=[]
+              arrNumText[2]=[]
+              arrNumText[3]=[]
+              arrNumText[4]=[]
+              arrNumText[5]=[]
+              arrNumText[6]=[]
+              arrNumText[7]=[]
+              arrNumText[8]=[]
+
+              break
+            case 10:
+              arr[0]=[]
+              arr[1]=[]
+              arr[2]=[]
+              arr[3]=[]
+              arr[4]=[]
+              arr[5]=[]
+              arr[6]=[]
+              arr[7]=[]
+              arr[8]=[]
+              arr[9]=[]
+
+              arrNumText[0]=[]
+              arrNumText[1]=[]
+              arrNumText[2]=[]
+              arrNumText[3]=[]
+              arrNumText[4]=[]
+              arrNumText[5]=[]
+              arrNumText[6]=[]
+              arrNumText[7]=[]
+              arrNumText[8]=[]
+              arrNumText[9]=[]
+              break
+          }
+          this.lotteryPosText=[];// 类型文本
+          this.lotteryPosCode=[];// 类型代码
+          let is_active = false
+
+          for (let m=0,len=val.length; m<len;m++) {
+            if (val[m].prams) {
+              for (let n=0,l=val[m].prams.length;n<l;n++) {
+                if (val[m].prams[n].active) { // 去重
+                  is_active = true
+                  if (!array_contain(this.lotteryPosText,val[m].type)) {
+                    this.lotteryPosText.push(val[m].type)
+                  }
+//                      let num2 = []
+                  if (val[m].code) {
+//                        this.lotteryPosCode=[]
+                    if (!array_contain(this.lotteryPosCode,val[m].code)) {
+                      this.lotteryPosCode.push(val[m].code)
+                    }
+                  }
+                  switch (m) {
+                    case 0:
+                      arr[0].push(val[m].prams[n].val);
+
+                      arrNumText[0].push(val[m].prams[n].name);
+                      break
+                    case 1:
+                      arr[1].push(val[m].prams[n].val);
+
+                      arrNumText[1].push(val[m].prams[n].name);
+                      break
+                    case 2:
+                      arr[2].push(val[m].prams[n].val);
+
+                      arrNumText[2].push(val[m].prams[n].name);
+                      break
+                    case 3:
+                      arr[3].push(val[m].prams[n].val);
+
+                      arrNumText[3].push(val[m].prams[n].name);
+                      break
+                    case 4:
+                      arr[4].push(val[m].prams[n].val);
+
+                      arrNumText[4].push(val[m].prams[n].name);
+                      break
+                    case 5:
+                      arr[5].push(val[m].prams[n].val);
+
+                      arrNumText[5].push(val[m].prams[n].name);
+                      break
+                    case 6:
+                      arr[6].push(val[m].prams[n].val);
+
+                      arrNumText[6].push(val[m].prams[n].name);
+                      break
+                    case 7:
+                      arr[7].push(val[m].prams[n].val);
+
+                      arrNumText[7].push(val[m].prams[n].name);
+                      break
+                    case 8:
+                      arr[8].push(val[m].prams[n].val);
+
+                      arrNumText[8].push(val[m].prams[n].name);
+                      break
+                    case 9:
+                      arr[9].push(val[m].prams[n].val);
+
+                      arrNumText[9].push(val[m].prams[n].name);
+                      break
+                    default:
+                      arr[10].push(val[m].prams[n].val);
+
+                      arrNumText[10].push(val[m].prams[n].name);
+                      break
+                  }
+
+                  /**
+                   * 每选一个号作为一条记录
+                   * */
+                  if(this.rates){
+//                        this.$store.state.user.userinfo
+                    if(sessionStorage.getItem('user')) {
+                      this.Bretate = parseFloat((this.rates[n]*this.rotae_ratio).toFixed(3))
+                    } else {
+                      this.Bretate = parseFloat((this.rates[n]*window.proxy_default_rate).toFixed(3))
+                    }
+// B盘才有
+                  }
+                  this.Abets = [];
+                  let num3 = [] // bet_numbers2
+//                      console.log(val[m].code)
+                  if (val[m].code!== undefined&&val[m].code!== null&&val[m].code!== '') {
+                    num3 = [val[m].code]
+                  }
+                  sumA++
+
+                  tem_obj = {
+                    lot_type_id: this.lot_type_id, // 彩票类型ID
+                    play_type_id:this.c_id,// 子 彩票玩法ID
+                    bet_numbers1: [val[m].prams[n].val],// 彩票投注号码数组  按位投注二维[[1,2],[3,4]]  一般投注一维[1,2,3]
+                    bet_numbers1Text:[val[m].prams[n].name],
+                    bet_numbers2: num3, // 彩票投注号码数组[拖码数组或位置数组]
+                    bet_amount:this.baseAmount  * (this.bet_count*(1+this.future_issues))*1,//投注金额
+                    bet_count: this.bet_count,//投注倍数
+                    bet_rate: this.Bretate,//投注赔率
+                    future_issues: this.future_issues,//追期数【范围0-50】
+                    unit_price: this.baseAmount,//单注彩票金额
+
+                    bet_type1: this.p_type,
+                    bet_type2: this.c_type,
+                    retrun_li: this.rotate,
+                    lotteryNum: 1, // 注数
+                    bet_name: [val[m].prams[n].name],
+                    lotteryPosText: [val[m].type]
+
+                  }
+//                      console.log(tem_obj)
+                  tem_arr.unshift(tem_obj)
+//                  console.log(tem_arr)
+                }
+              }
+            }
+          }
+//          console.log(tem_arr)
+
+          if (this.p_type!=='总肖'
+            &&this.p_type!=='7色波'
+            &&this.p_type!=='正肖'
+            &&this.p_type!=='平特一肖尾数'
+            &&this.p_type!=='五行'
+            &&this.p_type!=='正码1-6'
+            &&this.p_type!=='正码特'
+            &&this.p_type!=='正码'
+            &&this.p_type!=='头尾数'
+            &&this.p_type!=='特肖'
+            &&this.p_type!=='色波'
+            &&this.p_type!=='特码A'
+            &&this.p_type!=='特码B'
+            &&this.p_type!=='混合'
+            &&this.p_type!=='波色'
+            &&this.c_type!=='特码') {
+            /*
+             *  计算总投注数
+             * */
+            switch (this.number_count) {
+              case 1:
+                // 时时彩
+                if (this.c_type ==='定位胆'|| this.c_type ==='1-5球' ) {
+                  if(this.lot_type_id=='5'||this.lot_type_id=='14') {
+                    this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)+(arr[3].length)+(arr[4].length)+(arr[5].length)+(arr[6].length)+(arr[7].length)+(arr[8].length)+(arr[9].length)
+                  }
+                  else if (this.lot_type_id=='19'
+                    ||this.lot_type_id=='2'
+                    ||this.lot_type_id=='11') {
+                    this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)
+                  }
+                  else {
+                    this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)+(arr[3].length)+(arr[4].length)
+                  }
+
+                } else if (this.c_type ==='前中后') {
+                  this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)
+                } else if (this.c_type ==='两面盘') {
+                  if(this.lot_type_id=='5'||this.lot_type_id=='14') {
+                    this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)+(arr[3].length)+(arr[4].length)+(arr[5].length)+(arr[6].length)+(arr[7].length)+(arr[8].length)+(arr[9].length)
+                  }else {
+                    this.sumBetNum = (arr[0].length)+(arr[1].length)+(arr[2].length)+(arr[3].length)+(arr[4].length)+(arr[5].length)
+                  }
+                } else if (this.c_type ==='前三直选和值' || this.c_type ==='后三直选和值'
+                  ||(this.p_type=='三星'&& this.c_type ==='直选和值')) { // 3 和值
+                  let sum = 0;
+                  for (let i=0;i<arr[0].length;i++) {
+                    for (let m=0;m<10;m++) {
+                      for (let n=0;n<10;n++) {
+                        let k = arr[0][i]-m-n
+                        if (k>=0&&k<=9) {
+                          sum++
+                        }
+                      }
+                    }
+                  }
+
+                  this.sumBetNum =sum
+                }else if (this.p_type ==='三星' && this.c_type=='组三和值') { // 3 和值 与顺序无关
+                  let sum = 0
+
+                  for (let i=0;i<arr[0].length;i++) {
+                    if (arr[0][i]==1 || arr[0][i]==3 || arr[0][i]==24 || arr[0][i]==26) {
+                      sum +=  1
+                    } else if (arr[0][i]==2 || arr[0][i]==25) {
+                      sum +=  2
+                    } else if (arr[0][i]==4 || arr[0][i]==5 || arr[0][i]==6 || arr[0][i]==21 || arr[0][i]==22 || arr[0][i]==23) {
+                      sum +=  3
+                    } else if (arr[0][i]==7 || arr[0][i]==9 || arr[0][i]==12 || arr[0][i]==15 || arr[0][i]==18 || arr[0][i]==20) {
+                      sum +=  4
+                    } else if (arr[0][i]==8 || arr[0][i]==10 || arr[0][i]==11 || arr[0][i]==13 || arr[0][i]==14 || arr[0][i]==16 || arr[0][i]==17 || arr[0][i]==19) {
+                      sum +=  5
+                    }
+                  }
+                  this.sumBetNum =sum
+                }else if (this.p_type ==='三星' && this.c_type=='组六和值') { // 3 和值 与顺序无关
+                  let sum = 0
+                  for (let i=0;i<arr[0].length;i++) {
+                    if (arr[0][i]==3 || arr[0][i]==4 || arr[0][i]==23 || arr[0][i]==24) {
+                      sum +=  1
+                    } else if (arr[0][i]==5 || arr[0][i]==22) {
+                      sum +=  2
+                    } else if (arr[0][i]==6 || arr[0][i]==21) {
+                      sum +=  3
+                    } else if (arr[0][i]==7 || arr[0][i]==20) {
+                      sum +=  4
+                    } else if (arr[0][i]==8  || arr[0][i]==19) {
+                      sum +=  5
+                    } else if (arr[0][i]==9 || arr[0][i]==18) {
+                      sum +=  7
+                    } else if (arr[0][i]==10 || arr[0][i]==17) {
+                      sum +=  8
+                    } else if (arr[0][i]==11 || arr[0][i]==16) {
+                      sum +=  9
+                    } else if (arr[0][i]==12 || arr[0][i]==13 || arr[0][i]==14 || arr[0][i]==15) {
+                      sum +=  10
+                    }
+                  }
+                  this.sumBetNum =sum
+                }
+                else if (this.p_type=='任选二'&&
+                  (this.c_type ==='前二直选和值'||this.c_type ==='后二直选和值')){
+                  this.sumBetNum = 0
+                  for (let i=0,len=arr[0].length;i<len;i++) {
+                    if (arr[0][i]<10) {
+                      this.sumBetNum += arr[0][i]+1
+                    } else {
+                      this.sumBetNum += 20-arr[0][i]-1
+                    }
+                  }
+                } else if (this.p_type=='任选二'&&
+                  (this.c_type ==='前二组选和值'||this.c_type ==='后二组选和值')){
+                  this.sumBetNum = 0
+                  for (let i=0,len=arr[0].length;i<len;i++) {
+                    if (arr[0][i]<10) {
+                      this.sumBetNum += Math.floor((arr[0][i]+1)/2)
+                    } else {
+                      this.sumBetNum += Math.floor((20-arr[0][i]-1)/2)
+                    }
+                  }
+                } else if (this.p_type=='任选三'&&(this.c_type ==='前三组选和值'||this.c_type ==='后三组选和值')) {
+                  let sum = 0
+                  for (let i=0;i<arr[0].length;i++){
+                    if(arr[0][i]===1||arr[0][i]===26) {
+                      sum += 1
+                    } else if (arr[0][i]===2||arr[0][i]===3||arr[0][i]===24||arr[0][i]===25){
+                      sum += 2
+                    } else if (arr[0][i]===4||arr[0][i]===23){
+                      sum += 4
+                    } else if (arr[0][i]===5||arr[0][i]===22){
+                      sum += 5
+                    } else if (arr[0][i]===6||arr[0][i]===21){
+                      sum += 6
+                    } else if (arr[0][i]===7||arr[0][i]===20){
+                      sum += 8
+                    } else if (arr[0][i]===8||arr[0][i]===19){
+                      sum += 10
+                    } else if (arr[0][i]===9||arr[0][i]===18){
+                      sum += 11
+                    } else if (arr[0][i]===10||arr[0][i]===17){
+                      sum += 13
+                    } else if (arr[0][i]===11||arr[0][i]===12||arr[0][i]===15||arr[0][i]===16){
+                      sum += 14
+                    } else if (arr[0][i]===13||arr[0][i]===14){
+                      sum += 15
+                    }
+                  }
+                  this.sumBetNum = sum
+                }  else if(this.p_type=='和值'&&this.c_type ==='和值') {
+                  let sum = 0
+                  let tem = [0, 0, 0, 1, 3, 6, 10, 15, 21, 25, 27 ]
+
+                  for (let i=0;i<arr[0].length;i++) {
+                    if (arr[0][i] <= 10) {
+                      sum += tem[arr[0][i]]
+                    } else if (arr[0][i] > 10) {
+                      sum += tem[20 - arr[0][i] + 1]
+                    }
+                  }
+                  this.sumBetNum = sum
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)
+                }
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 2:
+                //  时时彩
+                if (this.p_type=='任选二'&&this.c_type ==='直选复式') {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length+arr[2].length+arr[3].length+arr[4].length)
+                    + (arr[1].length)*(arr[2].length+arr[3].length+arr[4].length)
+                    + (arr[2].length)*(length+arr[3].length+arr[4].length)
+                    + (arr[3].length)*(arr[4].length)
+                } else if((this.p_type=='任选二'&&(this.c_type ==='前二组选复式'||this.c_type ==='后二组选复式') )
+                  || (this.p_type=='二星'&&(this.c_type ==='前二组选'||this.c_type ==='后二组选'))
+                  || (this.p_type=='不定位'&&(this.c_type ==='二码不定位'|| this.c_type ==='一码不定位'))
+                  || (this.p_type=='二不同号'&&(this.c_type ==='标准'))
+                  || (this.p_type=='连码'&&(this.c_type ==='二全中'||this.c_type ==='中特'||this.c_type ==='特串'))
+                  || (this.p_type=='连肖连尾'&&(this.c_type ==='二连肖'||this.c_type ==='二连尾'))){ // 1 选 2
+                  this.sumBetNum = (arr[0].length)*(arr[0].length-1)/2
+                }  else if((this.p_type=='三星'&&this.c_type ==='组三复式') ){ // 组三
+                  this.sumBetNum = (arr[0].length)*(arr[0].length-1)/(1*2)*2
+                }
+                else if(this.p_type=='任选二'&&(this.c_type ==='五选二直选和值')){
+                  this.sumBetNum=0
+                  for (let i=0,len=arr[0].length;i<len;i++) {
+                    if (arr[0][i]<10) {
+                      this.sumBetNum += (~~arr[0][i]+1)*10
+                    } else {
+                      this.sumBetNum += (20-arr[0][i]-1)*10
+                    }
+                  }
+                } else if((this.p_type=='二码'&&(this.c_type ==='前二组选复式'|| this.c_type ==='后二组选复式'))
+                  || (this.p_type=='任选四'&&(this.c_type ==='前四组选6' || this.c_type ==='后四组选6'))) {
+//                      this.sumBetNum = (arr[0].length-1)>=0?(arr[0].length-1):0
+                  this.sumBetNum = (arr[0].length*(arr[0].length-1))/2
+                } else if( this.p_type=='任选三'&&(this.c_type ==='前三组三复式'||this.c_type ==='后三组三复式') ) { // 组三
+                  this.sumBetNum = (arr[0].length*(arr[0].length-1))/2*2
+                }
+                else if(this.p_type=='二码'&&(this.c_type ==='前二组选胆拖' || this.c_type ==='后二组选胆拖') ) {
+                  this.sumBetNum = arr[0].length*arr[1].length
+                }
+                else if (this.p_type=='任选复式'&&this.c_type ==='任选二中二') {
+                  this.sumBetNum = (arr[0].length*(arr[0].length-1))/2
+                } else if(this.p_type=='合肖'&&(this.c_type ==='合肖')) {
+                  this.sumBetNum = 1
+                  if(arr[0].length<2) {
+                    this.lhc_rate = '----'
+                    this.sumBetNum = 0
+                  } else if (arr[0].length===2) {
+                    this.lhc_rate = parseFloat((this.rates[0] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===3) {
+                    this.lhc_rate = parseFloat((this.rates[1] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===4) {
+                    this.lhc_rate = parseFloat((this.rates[2] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===5) {
+                    this.lhc_rate = parseFloat((this.rates[3] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===6) {
+                    this.lhc_rate = parseFloat((this.rates[4] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===7) {
+                    this.lhc_rate = parseFloat((this.rates[5] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===8) {
+                    this.lhc_rate = parseFloat((this.rates[6] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===9) {
+                    this.lhc_rate = parseFloat((this.rates[7] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===10) {
+                    this.lhc_rate = parseFloat((this.rates[8] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===11) {
+                    this.lhc_rate = parseFloat((this.rates[9] * this.rotae_ratio).toFixed(3))
+                  }
+                } else if((this.p_type=='二码'&&(this.c_type ==='前二直选复式'|| this.c_type ==='后二直选复式'))
+                  ||(this.p_type=='前二'&&(this.c_type ==='直选复式'))) {
+                  let sum=0
+                  for(let m=0;m<arr[0].length;m++){
+                    for(let n=0;n<arr[1].length;n++) {
+                      if (arr[0][m]===arr[1][n]){
+                        sum--
+                      }
+                    }
+                  }
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)+sum
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)
+                }
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 3:
+                if(this.c_type==='前三组选六'
+                  || this.c_type==='后三组选六'
+                  || (this.p_type=='三星'&&this.c_type ==='组六复式')
+                  || (this.p_type=='任选三'&&(this.c_type ==='前三组六复式'||this.c_type ==='后三组六复式'))
+                  || (this.p_type=='三星'&&(this.c_type ==='后三组选六'|| this.c_type ==='前三组选六' ))
+                  || (this.p_type=='连码'&&(this.c_type ==='中二'||this.c_type ==='三全中'))
+                  || (this.p_type=='连肖连尾'&&(this.c_type ==='三连肖'||this.c_type ==='三连尾'))) { // 组六
+                  this.sumBetNum = ((arr[0].length)*(arr[0].length-1)*(arr[0].length-2))/(1*2*3)
+                } else if (this.c_type==='前三组选三复式'
+                  || this.c_type==='后三组选三复式'
+                  || (this.p_type=='三星'&&(this.c_type ==='后三组选三'|| this.c_type ==='前三组选三' ))) {
+                  this.sumBetNum = ((arr[0].length)*(arr[0].length-1))/(1*2)*2
+                } else if (this.p_type=='三不同号'&&(this.c_type ==='标准' )) {// 快三
+                  this.sumBetNum = ((arr[0].length)*(arr[0].length-1)*(arr[0].length-2))/(1*2*3)
+                }
+                else if (this.p_type=='任选三'&&this.c_type ==='直选复式') {
+                  if (this.lot_type_id=='1'
+                    ||this.lot_type_id=='16'
+                    ||this.lot_type_id=='13'
+                    ||this.lot_type_id=='7'
+                    ||this.lot_type_id=='12') {
+                    this.sumBetNum =(arr[0].length)*(arr[1].length)*((arr[2].length)+(arr[3].length)+(arr[4].length)) +
+                      (arr[0].length)*(arr[2].length)*((arr[3].length)+(arr[4].length)) +
+                      (arr[0].length)*(arr[3].length)*((arr[4].length)) +
+                      (arr[1].length)*(arr[2].length)*((arr[3].length)+(arr[4].length)) +
+                      (arr[1].length)*(arr[3].length)*((arr[4].length)) +
+                      (arr[2].length)*(arr[3].length)*((arr[4].length))
+                  }else {
+                    this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)
+                  }
+
+                }  else if ((this.p_type=='任选三'&&(this.c_type ==='前四直选和值'||this.c_type ==='后四直选和值'))) {
+                  let sum = 0;
+                  for (let i=0;i<arr[0].length;i++) {
+                    for (let m=0;m<10;m++) {
+                      for (let n=0;n<10;n++) {
+                        let k = arr[0][i]-m-n
+                        if (k>=0&&k<=9) {
+                          sum++
+                        }
+                      }
+                    }
+                  }
+                  this.sumBetNum =sum*4
+                }  else if (this.p_type=='特码'&&(this.c_type ==='特码包三' )) {
+                  if(is_active) {
+                    this.sumBetNum =1
+                  } else {
+                    this.sumBetNum =0
+                  }
+
+                }
+                else if ((this.p_type=='三码'
+                  &&(this.c_type ==='前三组选复式'|| this.c_type ==='中三组选复式'
+                  || this.c_type ==='后三组选复式'))|| (this.p_type=='任选复式'&&this.c_type ==='任选三中三')){ // 组选
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)/1/2/3
+
+                } else if ((this.p_type=='三码'&&(this.c_type ==='前三组选胆拖'
+                  ||this.c_type ==='中三组选胆拖'
+                  ||this.c_type ==='后三组选胆拖'))
+                  ||(this.p_type=='三不同号'&&this.c_type ==='胆拖')
+                  ||(this.p_type=='任选胆拖'&&this.c_type ==='任选三中三')) { // 胆拖
+                  if(arr[0].length===1) {
+                    this.sumBetNum = (arr[1].length*(arr[1].length-1))/2
+                  } else if (arr[0].length===2) {
+                    this.sumBetNum = arr[1].length
+                  } else {
+                    if(arr[0].length===0) {
+                      this.sumBetNum = 0
+                    }
+                  }
+                } else if (this.p_type=='任选复式'&&this.c_type ==='任选三中三'){
+                  this.sumBetNum = arr[1].length*(arr[1].length-1)/2
+                }
+                else if (this.p_type=='三码'
+                  &&(this.c_type ==='前三直选复式' ||this.c_type ==='中三直选复式' ||this.c_type ==='后三直选复式')){
+//                    this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)
+                  let sum=0
+                  for (let i=0,len=arr[0].length;i<len;i++) {
+                    for (let m=0,len=arr[1].length;m<len;m++) {
+                      for (let n=0,len=arr[2].length;n<len;n++) {
+                        if(arr[0][i]!=arr[1][m]&&arr[0][i]!=arr[2][n]&&arr[1][m]!=arr[2][n]) {
+                          sum++
+                        }
+                      }
+                    }
+                  }
+                  this.sumBetNum = sum
+                } else if (this.p_type=='任选三'&&this.c_type ==='五选三直选和值') {
+                  let sum=0
+                  let sum2=0
+                  for (let n=0,len=arr[0].length;n<len;n++) {
+                    if (arr[0][n]<10) {
+                      for (let m=0,len=arr[0][n];m<=len+1;m++) {
+                        sum = sum+m
+                      }
+                    } else {
+                      if (arr[0][n]==10||arr[0][n]==17) {
+                        sum2 += 630
+                      } else if (arr[0][n]==11||arr[0][n]==16){
+                        sum2 += 690
+                      } else if (arr[0][n]==12||arr[0][n]==15){
+                        sum2 += 730
+                      } else if (arr[0][n]==13||arr[0][n]==14){
+                        sum2 += 750
+                      } else if (arr[0][n]==18){
+                        sum2 += 550
+                      } else if (arr[0][n]==19){
+                        sum2 += 450
+                      } else if (arr[0][n]==20){
+                        sum2 += 360
+                      } else if (arr[0][n]==21){
+                        sum2 += 280
+                      } else if (arr[0][n]==22){
+                        sum2 += 210
+                      } else if (arr[0][n]==23){
+                        sum2 += 150
+                      } else if (arr[0][n]==24){
+                        sum2 += 100
+                      } else if (arr[0][n]==25){
+                        sum2 += 60
+                      } else if (arr[0][n]==26){
+                        sum2 += 30
+                      } else if (arr[0][n]==27){
+                        sum2 += 10
+                      }
+                    }
+                  }
+                  this.sumBetNum =  5*4/(2*1)*(sum)+sum2
+                } else if (this.p_type == '前三' && this.c_type === '直选复式') {
+                  let sum=0
+                  for (let i=0,len=arr[0].length;i<len;i++) {
+                    for (let m=0,len=arr[1].length;m<len;m++) {
+                      for (let n=0,len=arr[2].length;n<len;n++) {
+                        if(arr[0][i]!=arr[1][m]&&arr[0][i]!=arr[2][n]&&arr[1][m]!=arr[2][n]) {
+                          sum++
+                        }
+                      }
+                    }
+                  }
+                  this.sumBetNum = sum
+                } else if( (this.p_type == '两面盘' && this.c_type === '龙虎和')) {
+                  this.sumBetNum = arr[1].length
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 4:
+                if ((this.p_type=='任选复式'&&this.c_type ==='任选四中四')
+                  || (this.p_type=='连码'&&(this.c_type ==='四全中'))
+                  || (this.p_type=='连肖连尾'&&(this.c_type ==='四连肖'||this.c_type ==='四连尾'))
+                  || (this.p_type==='任选四'&&(this.c_type==='前四组选24'||this.c_type==='后四组选24'))) {
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)/1/2/3/4
+                } else if(this.p_type=='任选四'&&this.c_type ==='直选复式'){
+                  this.sumBetNum =(arr[0].length)*(arr[1].length)*(arr[2].length)*((arr[3].length)+(arr[4].length)) +
+                    (arr[0].length)*(arr[1].length)*(arr[3].length)*(arr[4].length) +
+                    (arr[0].length)*(arr[2].length)*(arr[3].length)*(arr[4].length) +
+                    (arr[1].length)*(arr[2].length)*((arr[3].length)*(arr[4].length))
+                } else if(this.p_type=='任选胆拖'&&this.c_type ==='任选四中四'){
+                  if ((arr[0].length===1)){
+                    this.sumBetNum = arr[1].length<3?0:arr[1].length===3?1:arr[1].length
+                  } else if(arr[0].length===3){
+                    this.sumBetNum = arr[1].length
+                  } else if(arr[0].length===2){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)/2
+                  } else {
+                    this.sumBetNum = 0
+                  }
+
+                } else if (this.p_type==='任选四'&&(this.c_type==='前四组选12'||this.c_type==='后四组选12')){
+
+                  let sum=0
+                  for(let m=0;m<arr[0].length;m++){
+                    if (array_contain(arr[1],arr[0][m])){
+                      sum += (arr[1].length-1)*(arr[1].length-2)/2
+                    }else {
+                      sum += (arr[1].length-1)*(arr[1].length)/2
+                    }
+                  }
+                  this.sumBetNum = sum
+                }
+                else if (this.p_type==='任选四'&&(this.c_type==='前四组选4'||this.c_type==='后四组选4')){
+                  let sum=0
+                  for(let m=0;m<arr[0].length;m++){
+                    if (array_contain(arr[1],arr[0][m])){
+                      sum++
+                    }
+                  }
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)-sum
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 5:
+                if ((this.p_type=='任选复式'&&this.c_type ==='任选五中五')
+                  || (this.p_type=='连肖连尾'&&(this.c_type ==='五连肖'||this.c_type ==='五连尾'))) {
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)/1/2/3/4/5
+                } else if (this.p_type=='任选胆拖'&&this.c_type ==='任选五中五'){
+                  if ((arr[0].length===1)){
+                    this.sumBetNum = arr[1].length<4?0:(arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)/(4*3*2*1)
+                  } else if(arr[0].length===4){
+                    this.sumBetNum = arr[1].length
+                  } else if(arr[0].length===3){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)/2
+                  } else if(arr[0].length===2){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)/(3*2*1)
+                  } else {
+                    this.sumBetNum = 0
+                  }
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 6:
+                if ((this.p_type=='任选复式'&&this.c_type ==='任选六中五')) {
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)*(arr[0].length-5)/1/2/3/4/5/6
+                } else if (this.p_type=='任选胆拖'&&this.c_type ==='任选六中五'){
+                  if ((arr[0].length===1)){
+                    this.sumBetNum = arr[1].length<5?0:(arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)/(5*4*3*2*1)
+                  } else if(arr[0].length===5){
+                    this.sumBetNum = arr[1].length
+                  } else if(arr[0].length===2){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)/(4*3*2*1)
+                  } else if(arr[0].length===3){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)/(3*2*1)
+                  } else if(arr[0].length===4){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)/2
+                  } else {
+                    this.sumBetNum = 0
+                  }
+                } else if(this.c_type ==='自选不中') {
+                  this.sumBetNum = 1
+                  if(arr[0].length<6) {
+                    this.lhc_rate = '----'
+                    this.sumBetNum = 0
+                  } else if (arr[0].length===6) {
+                    this.lhc_rate = parseFloat((this.rates[0] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===7) {
+                    this.lhc_rate = parseFloat((this.rates[1] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===8) {
+                    this.lhc_rate = parseFloat((this.rates[2] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===9) {
+                    this.lhc_rate = parseFloat((this.rates[3] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===10) {
+                    this.lhc_rate = parseFloat((this.rates[4] * this.rotae_ratio).toFixed(3))
+                  } else if (arr[0].length===11) {
+                    this.lhc_rate = parseFloat((this.rates[5] * this.rotae_ratio).toFixed(3))
+                  }
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)*(arr[5].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 7:
+                if ((this.p_type=='任选复式'&&this.c_type ==='任选七中五')) {
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)*(arr[0].length-5)*(arr[0].length-6)/1/2/3/4/5/6/7
+                } else if (this.p_type=='任选胆拖'&&this.c_type ==='任选七中五'){
+                  if ((arr[0].length===1)){
+                    this.sumBetNum = arr[1].length<6?0:(arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)*(arr[1].length-5)/(6*5*4*3*2*1)
+                  } else if(arr[0].length===6){
+                    this.sumBetNum = arr[1].length
+                  } else if(arr[0].length===2){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)/(5*4*3*2*1)
+                  } else if(arr[0].length===3){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)/(4*3*2*1)
+                  } else if(arr[0].length===4){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)/(3*2*1)
+                  } else if(arr[0].length===5){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)/(2*1)
+                  } else {
+                    this.sumBetNum = 0
+                  }
+                } else if (this.c_type ==='普通投注') {
+                  if(this.lot_type_id == '10') {
+                    this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)*(arr[0].length-5)/(1*2*3*4*5*6)*(arr[1].length)
+                  } else if(this.lot_type_id == '4') {
+                    this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)/(1*2*3*4*5)*(arr[1].length)*(arr[1].length-1)/(1*2)
+                  }
+
+                }
+                else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)*(arr[5].length)*(arr[6].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 8:
+                if ((this.p_type=='任选复式'&&this.c_type ==='任选八中五')) {
+                  this.sumBetNum = arr[0].length*(arr[0].length-1)*(arr[0].length-2)*(arr[0].length-3)*(arr[0].length-4)*(arr[0].length-5)*(arr[0].length-6)*(arr[0].length-7)/1/2/3/4/5/6/7/8
+                } else if (this.p_type=='任选胆拖'&&this.c_type ==='任选八中五'){
+                  if ((arr[0].length===1)){
+                    this.sumBetNum = arr[1].length<7?0:(arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)*(arr[1].length-5)*(arr[1].length-6)/(7*6*5*4*3*2*1)
+                  } else if(arr[0].length===7){
+                    this.sumBetNum = arr[1].length
+                  } else if(arr[0].length===2){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)*(arr[1].length-5)/(6*5*4*3*2*1)
+                  } else if(arr[0].length===3){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)*(arr[1].length-4)/(5*4*3*2*1)
+                  } else if(arr[0].length===4){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)*(arr[1].length-3)/(4*3*2*1)
+                  } else if(arr[0].length===5){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)*(arr[1].length-2)/(3*2*1)
+                  } else if(arr[0].length===6){
+                    this.sumBetNum = (arr[1].length)*(arr[1].length-1)/(2*1)
+                  } else {
+                    this.sumBetNum = 0
+                  }
+                } else {
+                  this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)*(arr[5].length)*(arr[6].length)*(arr[7].length)
+                }
+
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              case 9:
+                this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)*(arr[5].length)*(arr[6].length)*(arr[7].length)*(arr[8].length)
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+              default:
+                this.sumBetNum = (arr[0].length)*(arr[1].length)*(arr[2].length)*(arr[3].length)*(arr[4].length)*(arr[5].length)*(arr[6].length)*(arr[7].length)*(arr[8].length)*(arr[9].length)
+                this.sumCash = (this.sumBetNum) * (this.baseAmount)
+                break
+            }
+
+            /*
+             * 清空空数组
+             * */
+            if (arr.length>0) {
+              this.activeArr=[]
+              for (let m=0;m<arr.length;m++) {
+                if (arr[m].length!==0) {
+                  this.activeArr.push(arr[m])
+                }
+              }
+            }
+
+            this.bet_numbers1Text = arrNumText;
+
+            console.log(this.activeArr)
+            /*console.log(this.bet_numbers1Text)
+            console.log(this.lotteryPosText)
+            console.log(this.lotteryPosCode)*/
+          } else{
+            this.sumBetNum = sumA
+            this.sumCash = (this.sumBetNum) * (this.baseAmount)
+            this.Abets = tem_arr // lhc
+
+            console.log(this.Abets)
+
+          }
+
+        } else if (this.pan==2) { // B盘
+          this.specialDial = []; // update 20180115
+          this.specialDialTxt = []; // update 20180115
+          let sum=0 // 总投注数
+          let tem_obj = {}
+          let tem_arr = []
+          let arrVal = [];// 选号
+          let arrName = [];// 选号对应的文本
+          this.lotteryPosText=[];// 类型文本
+//              console.log(this.bet_count)
+          for (let m=0,len=val.length; m<len;m++) { // 二维数组最外层 m
+            if (val[m].prams) {
+              for (let n=0,l=val[m].prams.length;n<l;n++) {
+                if (val[m].prams[n].active) {
+//                      this.$store.state.user.userinfo
+                  this.Bretate = this.c_type=='两面盘'?parseFloat((this.rates[n+10]*this.rotae_ratio).toFixed(3))
+                    :this.c_type=='1-5球'?parseFloat((this.rates[m]*this.rotae_ratio).toFixed(3))
+                      :parseFloat((this.rates[n]*this.rotae_ratio).toFixed(3))
+                  /*if(this.userinfo){
+                    this.Bretate = this.c_type=='两面盘'?(this.rates[n+10]*this.userinfo.return_ratio_rate).toFixed(3)
+                      :this.c_type=='1-5球'?(this.rates[m]*this.userinfo.return_ratio_rate).toFixed(3)
+                        :(this.rates[n]*this.userinfo.return_ratio_rate).toFixed(3)
+                  }else {
+                    this.Bretate = this.c_type=='两面盘'?this.rates[n+10] :this.c_type=='1-5球'?this.rates[m] :this.rates[n]
+                  }*/
+
+                  this.Bbets = [];
+                  this.lotteryPosText =[val[m].type]
+                  if(this.c_type=='前中后') {
+                    arrVal = [val[m].prams[n].val];
+                  } else {
+                    arrVal = val[m].prams[n].name=='豹子'?[]:[val[m].prams[n].val];
+                  }
+
+                  arrName= [val[m].prams[n].name];
+                  let num2 = [] // bet_numbers2
+
+                  if (val[m].code!== undefined&&val[m].code!== null&&val[m].code!== '') {
+                    if(this.c_type=='前中后') {
+                      num2 = [val[m].code];
+                    } else {
+                      num2 = val[m].prams[n].name=='豹子'?[3]:[val[m].code]
+                    }
+
+                  }
+                  if(val[m].prams[n].code) {
+                    num2 = [val[m].prams[n].code]
+                  }
+                  sum++
+                  if(this.p_type == '两面盘' && this.c_type === '龙虎和' && m===0) {  // update 20180115
+                    sum--
+                  }
+                  if(this.p_type == '两面盘' && this.c_type === '龙虎和' && m===0) {  // update 20180115
+                    this.specialDial.push(val[0].prams[n].val)
+                    this.specialDialTxt.push(val[0].prams[n].name)
+                  }
+
+                  /*
+                   * 临时赔率数组
+                   * */
+
+                  tem_obj = {
+                    lot_type_id: this.lot_type_id, // 彩票类型ID
+                    play_type_id:this.c_id,// 子 彩票玩法ID
+                    bet_numbers1: arrVal,// 彩票投注号码数组  按位投注二维[[1,2],[3,4]]  一般投注一维[1,2,3]
+                    bet_numbers1Text:this.bet_numbers1Text,
+                    bet_numbers2: (this.p_type == '两面盘' && this.c_type === '龙虎和')? this.specialDial :num2, // 彩票投注号码数组[拖码数组或位置数组]
+                    bet_amount:(this.baseAmount*this.bet_count*this.future_issues+this.bet_count*this.baseAmount)*1,//投注金额
+                    bet_count: this.bet_count,//投注倍数
+//                        bet_rate: this.lowest_rate,//投注赔率
+                    bet_rate: this.Bretate,//投注赔率
+                    future_issues: this.future_issues,//追期数【范围0-50】
+                    unit_price: this.baseAmount,//单注彩票金额
+
+                    bet_type1: this.p_type,
+                    bet_type2: this.c_type,
+                    retrun_li: this.rotate,
+                    lotteryNum: 1, // 注数
+                    bet_name: arrName,
+                    lotteryPosText: (this.p_type == '两面盘' && this.c_type === '龙虎和')? [this.specialDialTxt.join('')] :this.lotteryPosText
+
+                  }
+                  console.log(num2)
+                  tem_arr.unshift(tem_obj)
+                  if(this.p_type == '两面盘' && this.c_type === '龙虎和' && m===0) {  // update 20180115
+                    tem_arr.shift(tem_obj)
+                  }
+
+                }
+              }
+            }
+          }
+          /*
+           *  计算总投注数
+           * */
+          this.sumBetNum = sum
+          this.sumCash = (this.sumBetNum) * (this.baseAmount)
+
+
+          this.Bbets = tem_arr
+
+          console.log(this.Bbets)
+        }
+
+      },
+      deep:true
+    },
+    lot_curr_obj: {
+      handler(val) {
+        if(val.curr_count_down==3) {
+          if(this.bets.length>0) {
+            setTimeout(() => {
+              alertip('本盘已结束，是否要清空投注项？',() => {
+                this.bets = []
+              })
+            },3000)
+          }
+          return false
+        }
+      },
+      deep:true
+    }
+
+  }
+}
+</script>
+
+<style scoped lang="stylus">
+  button:disabled {
+    cursor not-allowed
+  }
+.betcenter {
+  position relative
+  min-width 1360px
+  .return-home {
+    position absolute
+    top 35px
+    left 265px
+    padding 0 .5rem
+    line-height 2.25rem
+    color #0047aa
+    cursor pointer
+    font-size 1rem
+    &:hover {
+      color #0266A3
+      text-decoration underline
+      opacity .8
+    }
+    i {
+      display inline-block
+      margin-right .5rem
+      margin-top .5rem
+      font-size 1.25rem
+      line-height 1
+    }
+  }
+  .betcenter-container {
+    height 100%
+    min-width 97rem
+  }
+  .betcenter-content {
+    position relative
+    display flex
+    padding-left 20.8rem
+    overflow auto
+    background url("../../image/bg-shading.png") repeat
+
+    /*height 100%*/
+    /*min-height 500px*/
+    .betcenter-con-left {
+      position absolute
+      top 0
+      left 0
+      width 240px
+      background #0047aa
+      color #fff
+      text-indent 20px
+      ul {
+        li {
+          position relative
+          border-bottom 1px solid #444
+          &:last-child {
+            border-bottom 0
+          }
+          &:first-child {
+            box-shadow 0 1px 1px -1px #000
+          }
+          span {
+            display inline-block
+            width 90%
+            padding 15px 0
+            text-indent 0
+          }
+          i {
+            position absolute
+            right 20px
+            top 15px
+            &.up {
+              transform rotate(180deg)
+              right 0
+            }
+          }
+          /*lottery*/
+          dl {
+            display flex
+            align-items center
+            background #003886
+            margin 0
+            padding 10px 0
+            border-bottom 1px solid rgba(255,255,255,.1)
+            &:last-child {
+              border-bottom 0
+            }
+            &.lotActive,&:hover {
+              background #ff0021
+              text-indent 40px
+            }
+            dt {
+              width 35px
+              height 35px
+              img {
+                width 100%
+                border-radius 50%
+              }
+            }
+            dd {
+              text-align left
+              margin-left 20px
+            }
+          }
+        }
+      }
+    }
+    /*right*/
+    .betcenter-con-right {
+      flex-grow 1
+      width 100%
+      min-width 600px
+      /*max-width 1200px*/
+      overflow: auto;
+      /*margin-left 260px*/
+      margin-top 20px
+      background-color: #f2f2f2;
+      box-shadow: 0 16px 24px 2px rgba(67,74,100,.14), 0 6px 30px 5px rgba(67,74,100,.12), 0 8px 10px -5px rgba(67,74,100,.4);
+      border-radius: 6px;
+      .betcenter-con-bg {
+        width: 100%;
+        background-color: #fff;
+        .betcenter-con-right-info {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: stretch;
+          flex-pack: justify;
+          padding 10px 5px
+          .betcenter-con-right-opt {
+            flex 1
+            dl {
+              display flex
+              /*width 340px*/
+              dt {
+                flex-basis 70px
+                min-height 70px
+                img {
+                  width 100%
+                  border-radius 50%
+                }
+              }
+              dd {
+                margin-left 20px
+                h2 {
+                  width 234px
+                  font-weight 700
+                  span {
+                    float right
+                    display inline-block
+                    margin-top 2px
+                    margin-right  20px
+                    width 80px
+                    font-weight normal
+                    font-size 16px
+                    color #ff0021
+                    select {
+                      float right
+                      &[disabled] {
+                        cursor not-allowed
+                      }
+                    }
+                  }
+                }
+                .lot-ansy-btns {
+                  padding-top 12px
+                  span {
+                    padding .25rem .5rem
+                    box-shadow: 0 2px 2px 0 rgba(67,74,100,.14), 0 1px 5px 0 rgba(67,74,100,.12), 0 3px 1px -2px rgba(67,74,100,.2);
+                    i {
+                      margin-left .5rem
+                      margin-top .75rem
+                      color #005cdd
+                    }
+                    button {
+                      appearance none
+                      padding .5rem
+                      border 0
+                      background none
+                      color #005cdd
+                      &:focus {
+                        outline none
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            .counter {
+              padding 5px
+              font-size 18px
+              color #777
+              strong {
+                color #444
+              }
+            }
+            .timer {
+              display flex
+              align-items center
+              height 80px
+              padding 5px
+              .borderd {
+                width 88px
+                height 66px
+                padding-right 10px
+                background url("../../image/icon/timer.png") no-repeat
+                color #fff
+                line-height 66px
+                text-align center
+                font-size 30px
+                /*&:last-child {
+                  padding-right 0
+                }*/
+              }
+              .spice {
+                padding-right 10px
+              }
+            }
+            .finished-issue {
+              /*min-width 300px*/
+              padding 5px
+              font-size 18px
+              color #777
+              strong {
+                color #333
+                font-weight 700
+              }
+              i {
+                display inline-block
+                width 4px
+                height 4px
+                margin-right .2rem
+                background #777
+                border-radius 50%
+
+                &:nth-child(1) {
+                  animation load 1s linear infinite
+                  animation-delay .1s
+                }
+                &:nth-child(2) {
+                  animation load 1s linear infinite
+                  animation-delay .2s
+                }
+                &:nth-child(3) {
+                  animation load 1s linear infinite
+                  animation-delay .3s
+                }
+                &:nth-child(4) {
+                  animation load 1s linear infinite
+                  animation-delay .4s
+                }
+                &:nth-child(5) {
+                  animation load 1s linear infinite
+                  animation-delay .5s
+                }
+                &:nth-child(6) {
+                  animation load 2s linear infinite
+                  animation-delay .5s
+                }
+
+              }
+            }
+            .numberX {
+              /*max-width 350px*/
+              display flex
+              align-items center
+              margin-top 20px
+              span.lot_number {
+                display: inline-block;
+                width: 2.25rem;
+                height: 2.25rem;
+                margin: 0 .25rem .5rem 0;
+                color #fff
+                text-align: center;
+                line-height: 2.25rem;
+                font-size: 1.2rem;
+                font-weight: 600;
+                background-color: #d50000;
+                background-image: linear-gradient(145deg,#feb505,#f26921 30%,#ef0000 60%,#d50000);
+                border-radius: 50%;
+                &[data-color] {
+                  position relative
+                  margin-bottom 1.25rem
+                  .lotName {
+                    position absolute
+                    top 100%
+                    left 50%
+                    background transparent
+                    color #4c4c4c
+                    font-size 1rem
+                    line-height 1.5
+                    transform translateX(-50%)
+                  }
+                }
+                &[data-color=blue],&.bg-blue {
+                  background-color #0047aa
+                  background-image linear-gradient(145deg, #4492ff, #1174ff 30%,#005cdd 60%, #0047aa)
+                }
+                &[data-color=green],&.bg-green {
+                  background-color #187e00
+                  background-image linear-gradient(145deg, #27cb00, #22b100 30%, #1d9800 60%, #187e00)
+                }
+                &.no-bg {
+                  background transparent
+                }
+
+              }
+            }
+          }
+        }
+        .betcenter-con-tabs {
+          background #0047aa
+          color #fff
+          &.lhc_tab {
+            max-width 1200px
+            /*overflow-x scroll*/
+            ul {
+              li {
+                /*min-width:8rem*/
+              }
+            }
+          }
+          ul {
+            display flex
+            align-items center
+            li {
+              padding .5rem 1rem
+              text-align center
+              &.typeActive {
+                background #ff0021
+              }
+            }
+          }
+        }
+        .betcenter-select-number {
+          display flex
+          /*width 71rem*/
+          margin 1rem auto
+          background #f5f5f5
+          .select-number-l {
+            flex 9
+            .betcenter-sub-tabs {
+              margin: 0 0 10px;
+              padding: 0 10px;
+              display: flex;
+              flex-direction: row;
+              flex-wrap: wrap;
+              font-size: 16px;
+              span {
+                height: 40px;
+                line-height 40px
+                border-radius: 6px;
+                background-color: #fff;
+                color: #9a9a9a;
+                padding: 0 20px;
+                box-shadow: 0 2px 2px 0 rgba(67,74,100,.14), 0 1px 5px 0 rgba(67,74,100,.12), 0 3px 1px -2px rgba(67,74,100,.2);
+                margin-right: 10px;
+                transition-property: box-shadow;
+                transition-duration: .15s;
+                transition-timing-function: cubic-bezier(.4,0,.2,1);
+                margin-top: 10px;
+                &.ctabsActive {
+                  background-color: #434a64;
+                  box-shadow: 0 0 0 transparent;
+                  color: #feb505;
+                }
+              }
+            }
+            .number-zone {
+              display: flex;
+              flex-direction: column;
+              min-height: 16.5rem;
+              margin: 1rem .5rem .5rem;
+              padding: 1.5rem 0 1rem .5rem;
+              border-radius: 6px;
+              background-color: #fff;
+              box-shadow: 0 2px 2px 0 rgba(67,74,100,.14), 0 1px 5px 0 rgba(67,74,100,.12), 0 3px 1px -2px rgba(67,74,100,.2);
+              .number-zone-item {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                align-items: center;
+                margin-bottom: .5rem;
+                font-size: .875rem;
+                .num-zone-label {
+                  display: flex;
+                  position: relative;
+                  min-width: 4.5rem;
+                  padding: 0 .5rem;
+                  margin-right: 1.875rem;
+                  margin-bottom: .5rem;
+                  margin-left: -1rem;
+                  background-color: #0047aa;
+                  font-size: .85rem;
+                  color: #fff;
+                  line-height: 1.75rem;
+
+                  &:after {
+                    content: "";
+                    display: inline-block;
+                    position: absolute;
+                    left: 100%;
+                    top: 0;
+                    border-width: .875rem;
+                    border-style: solid;
+                    border-color: transparent transparent transparent #0047aa;
+
+                  }
+                }
+                .num-zone-btns {
+                  display: flex;
+                  flex-direction: row;
+                  flex-wrap: wrap;
+                  flex: 1;
+                  justify-content: flex-start;
+                  .num-zone-btn {
+                    position: relative;
+                    height: 2.5rem;
+                    min-width: 2.5rem;
+                    margin-right: .7rem;
+                    margin-bottom: .5rem;
+                    padding: 0 .6rem;
+                    border: 0 solid #f2f2f2;
+                    font-weight: 700;
+                    color: #434a64;
+                    text-align: center;
+                    line-height: 1;
+                    border-radius: 1.25rem;
+                    box-shadow: 0 1px 2px 0 #afafaf;
+                    background-image: linear-gradient(-180deg,#f2f2f2,#e5e5e5);
+                    outline none
+                    font-size 1rem
+                    &:hover {
+                      cursor pointer
+                      color #ff0021
+                    }
+                    &.numActive {
+                      background-image: linear-gradient(-180deg,#ff0021,#e6001e);
+                      border-color: #0052c3;
+                      box-shadow: inset 0 2px 2px 0 rgba(67,74,100,.14), inset 0 1px 5px 0 rgba(67,74,100,.12), inset 0 3px 1px -2px rgba(67,74,100,.2);
+                      color: #fff;
+                    }
+                    &.panb {
+                      margin-bottom 1.5rem
+                      .num-zone-btnRotate {
+                        position absolute
+                        bottom 0
+                        left 50%
+                        color #ff0021
+                        font-weight 400
+                        font-size .95rem
+                        line-height 1.5
+                        transform translate3d(-50%, 100%, 0)
+                      }
+                    }
+                    &.spcialBplay {
+                      margin-bottom .5rem
+                    }
+                  }
+                  .num-zone-rotate-label {
+                    width 100%
+                    margin-bottom .5rem
+                    color #ff0021
+                    line-height 1.5
+                    font-size .85rem
+                  }
+                  .num-groupzone-btn {
+                    display flex
+                    justify-content space-between
+                    align-items flex-start
+                    flex-direction row
+                    flex-wrap nowrap
+                    position relative
+                    width 100%
+                    margin 0 1rem 1.5rem 0
+                    height auto
+                    font-weight 700
+                    border-radius 6px
+                    &.bd-red {
+                      color #ff0021
+                      &[data-active=true] {
+                        color #fff
+                        background #ff0021
+                      }
+                    }
+                    &.bd-blue {
+                      color #0047aa
+                      &[data-active=true] {
+                        color #fff
+                        background #0047aa
+                      }
+                    }
+                    &.bd-green {
+                      color #187e00
+                      &[data-active=true] {
+                        color #fff
+                        background #187e00
+                      }
+                    }
+                    &[data-active=true] {
+                      .num-btnNums {
+                        &.bd-red, &.bd-blue, &.bd-green{
+                          border-color transparent
+                          color #fff
+                        }
+                      }
+                    }
+                    .num-btnDisplayText {
+                      display flex
+                      justify-content center
+                      align-items center
+                      min-width 2.25rem
+                      height 2.25rem
+                      border 1px solid transparent
+                      border-radius 1.125rem
+                    }
+                    .num-btnNums {
+                      display flex
+                      flex 1
+                      flex-direction row
+                      flex-wrap wrap
+                      padding-top .65rem
+                      padding-left .5rem
+                      margin-left .5rem
+                      border 1px solid
+                      border-radius 6px
+                      &.bd-red {
+                        color #ff0021
+                      }
+                      &.bd-blue {
+                        color #0047aa
+                      }
+                      &.bd-green {
+                        color #187e00
+                      }
+                      .num-btnNum {
+                        display inline-block
+                        font-size .85rem
+                        margin-right .5rem
+                        margin-bottom .5rem
+                      }
+                    }
+                    .num-zone-btnRotate {
+                      position absolute
+                      bottom 0
+                      left 50%
+                      color #ff0021
+                      font-weight 400
+                      font-size .85rem
+                      line-height 1.5
+                      transform translate3d(-50%, 100%, 0)
+                    }
+                  }
+                }
+                .num-other-btns {
+                  display: flex;
+                  margin-left: .5rem;
+                  justify-content: flex-start;
+                  .num-other-btn {
+                    position: relative;
+                    height: 2.25rem;
+                    min-width: 2.25rem;
+                    padding: 0 .5rem;
+                    margin-right: .5rem;
+                    margin-bottom: .5rem;
+                    border: 0 solid #f2f2f2;
+                    background-image: linear-gradient(-180deg,#f2f2f2,#e5e5e5);
+                    line-height: 1;
+                    color: #434a64;
+                    font-weight: 400;
+                    text-align: center;
+                    box-shadow: 0 1px 2px 0 #afafaf;
+                    border-radius: 1.125rem;
+                    outline none
+                    font-size 1rem
+                    &:hover {
+                      cursor pointer
+                      color #ff0021
+                    }
+                    &.allActive,&.bigActive,&.smallActive ,&.evenActive ,&.oddActive  {
+                      background-image: linear-gradient(-180deg,#ff0021,#e6001e);
+                      border-color: #0052c3;
+                      box-shadow: inset 0 2px 2px 0 rgba(67,74,100,.14), inset 0 1px 5px 0 rgba(67,74,100,.12), inset 0 3px 1px -2px rgba(67,74,100,.2);
+                      color: #fff;
+                    }
+                    &[disabled] {
+                      cursor not-allowed
+                      background #f2f2f2
+                      color #9a9a9a
+                      box-shadow 0 0 0 transparent
+                    }
+                  }
+                }
+              }
+            }
+            .game-cash-card {
+              display: flex;
+              flex-direction: row;
+              align-content: center;
+              align-items: center;
+              height: 2.25rem;
+              margin: .5rem;
+              padding: 0 .5rem 0 1rem;
+              background-color: #e3e3ec;
+              color: #434a64;
+              font-size: .875rem;
+              .gameCal_baseamount,.gameCal_mutiply {
+                width 4rem
+                height 1.5rem
+                padding 0 .5rem
+                margin-left .5rem
+                text-align center
+              }
+              .gameCal_mutiply {
+                margin-left 0
+              }
+              .gameCal_unitBtn {
+                width 1.5rem
+                height 1.5rem
+                margin 0 .25rem
+                background #434a64
+                color #fff
+                font-weight 700
+                font-size .75rem
+                line-height  1
+                outline none
+                border 0
+                &[data-active=true] {
+                  background #ff0021
+                }
+              }
+              .gameCal_multiplySpan {
+                margin-left 1.5rem
+                margin-right .5rem
+              }
+              .gameCal_multiplyBtn {
+                display flex
+                justify-content center
+                align-items center
+                outline none
+                width 1.5rem
+                height 1.5rem
+                margin 0 .25rem
+                border 0
+                background #434a64
+                color #fff
+                line-height 1
+                font-size 1rem
+                cursor pointer
+              }
+              .gameCal_ctrlBtns {
+                display flex
+                flex 1
+                justify-content flex-end
+                .gameCal_ctrlBtn ,.gameCal_ctrlBtn_clear{
+                  min-width 4rem
+                  height 1.5rem
+                  padding 0 .5rem
+                  margin-left .5rem
+                  line-height  1
+                  color #434a64
+                }
+                .gameCal_ctrlBtn_clear {
+                  color #fff
+                  background #ff0021
+                }
+                .gameCal_ctrlBtn {
+                  &:hover {
+                    color #ff0021
+                  }
+                  &[disabled] {
+                    cursor not-allowed
+                    background #f2f2f2
+                    color rgba(0,0,0,.9)
+                    box-shadow 0 0 0 transparent
+                  }
+                }
+              }
+
+            }
+            .game-bet-list {
+              .game-bet-list-body {
+                margin 0 .5rem
+                padding .5rem 0
+                background #eaeaea
+                .game-bet-list-item-title {
+                  display flex
+                  color #777
+                  font-size .9rem
+                  text-align center
+                  .bet-title {
+                    flex 1
+                    display flex
+                    justify-content center
+                    align-items center
+                    padding-bottom .5rem
+                    button {
+                      padding .1rem .5rem
+                      background #ff0021
+                      color #fff
+                      &[disabled] {
+                        background #eaeaea
+                        color #999
+                        box-shadow 0 2px 2px 0 rgba(67,74,100,.14), 0 1px 5px 0 rgba(67,74,100,.12), 0 3px 1px -2px rgba(67,74,100,.2)
+                      }
+                    }
+                  }
+                  .bet-title-play {
+                    flex 2
+                    padding-bottom .5rem
+                  }
+                }
+
+                .game-bet-list-item-body {
+                  min-height 15rem
+                  background #f0f0f0
+                  .game-bet-list-item-section {
+                    display flex
+                    flex-direction row
+                    align-items center
+                    min-height 70px
+                    text-align center
+                    border-bottom 1px dashed #ccc
+                    &:hover {
+                      background #ffe4cc
+                    }
+                    .bet-section-play {
+                      flex 2
+                    }
+                    .bet-section {
+                      flex 1
+                      i {
+                        display inline-block
+                        min-width 3rem
+                        height 70px
+                        line-height 70px
+                        font-size 1.5rem
+                        color #ff0021
+                        cursor pointer
+                      }
+                      input {
+                        width 70px
+                        height 28px
+                        border 1px solid #ddd
+                        background #f0f0f0
+                        color #ff0021
+                        font-size 1rem
+                        text-align center
+                        border-radius 4px
+                        &:focus {
+                          border-color #ff0021
+                        }
+                      }
+                    }
+                  }
+                  .game-bet-no-data {
+                    height 3.5rem
+                    text-align center
+                    line-height 3.5rem
+                    span {
+                      padding .5rem
+                    }
+                  }
+                }
+              }
+            }
+          }
+          .betcenter-wediget {
+            min-width 18.75rem
+            align-items: center;
+            flex-direction: column;
+            flex: 3;
+            .game-history {
+              overflow: hidden;
+              display: flex;
+              align-self: stretch;
+              flex-direction: column;
+              margin:10px 10px 10px 0;
+              border-radius: 6px;
+              color: #4c4c4c;
+              .game-history-header {
+                display flex
+                font-size .75rem
+                .game-history-item {
+                  flex 1
+                  background #0047aa
+                  color #fff
+                  line-height: 1.5rem;
+                  padding: 0 .25rem;
+                  &:last-child {
+                    text-align right
+                  }
+                }
+              }
+              .game-history-body {
+                overflow-y scroll
+                width: 100%;
+                max-height: 13.5rem;
+                font-size .75rem
+                transition: max-height .15s cubic-bezier(.4,0,.2,1);
+                .game-history-item {
+                  width 100%
+                  padding .2rem 0
+                  &:nth-child(even) {
+                    background #fff
+                  }
+                  &:after {
+                    content ''
+                    clear both
+                    display block
+                  }
+                  .game-history-l {
+                    float left
+                    color #333
+                    line-height: 1.5rem;
+                    padding: 0 .25rem;
+                    &:last-child {
+                      float right
+                      max-width 13rem
+                      text-align right
+                      color #ff0021
+                    }
+                    span {
+                      display inline-block
+                      min-width 1.2rem
+                      height 1.2rem
+                      margin-left .25rem
+                      line-height 1.2rem
+                      font-size .5625rem
+                      color #fff
+                      background #ff0021
+                      text-align center
+                      border-radius .6rem
+                      &[data-color=blue],&.bg-blue {
+                        background-color #0047aa
+                      }
+                      &[data-color=green],&.bg-green {
+                        background-color #187e00
+                      }
+                    }
+                    img {
+                      position relative
+                      top .25rem
+                      width 1.2rem
+                      height 1.2rem
+                    }
+                  }
+                }
+              }
+              .game-history-footer {
+                display flex
+                flex-direction row
+                font-size .9rem
+                .game-history-footer-item {
+                  flex 1
+                  display flex
+                  align-items center
+                  padding .25rem
+                  background #fff
+                  line-height 1.5rem
+                  color #4c4c4c
+                  &:last-child {
+                    justify-content flex-end
+                  }
+                  .gameHistory_l,.gameHistory_r {
+                    display: flex;
+                    align-items center
+                    i {
+                      font-size 1rem
+                      margin-right .5rem
+                    }
+                  }
+                  .gameHistory_m {
+                    width 3rem
+                    margin auto
+                  }
+
+                }
+              }
+            }
+            .ratio-ctrl {
+              display flex
+              align-self stretch
+              flex-direction column
+              margin .5rem .5rem .5rem 0
+              .ratioCtrl_paragraph {
+                display flex
+                flex-direction row
+                height 1.7rem
+                font-size 1.2rem
+                margin-top .25rem
+                .ratioCtrl_label {
+                  display flex
+                  position relative
+                  width 4.5rem
+                  padding 0 .25rem
+                  background #0047aa
+                  color #fff
+                  font-size .9rem
+                  line-height 1.7rem
+                  border-top-left-radius 6px
+                  border-bottom-left-radius 6px
+                  &:after {
+                    content ''
+                    position absolute
+                    top 0
+                    left 100%
+                    width 1.7rem
+                    height 1.7rem
+                    border-width .85rem
+                    border-style solid
+                    background transparent
+                    border-color transparent transparent transparent #0047aa
+                  }
+                }
+                .ratioCtrl_content {
+                  display flex
+                  flex 1
+                  min-width 0
+                  padding 0 .25rem 0 1.5rem
+                  background #fff
+                  color #0047aa
+                  line-height 1.7rem
+                  border-top-right-radius 6px
+                  border-bottom-right-radius 6px
+                }
+              }
+              .ratioCtrl_range {
+                padding 0 .75rem
+                margin .5rem auto
+                background #0047aa
+                color #fff
+                border-radius 3rem
+                box-shadow inset 0 2px 2px 0 rgba(67,74,100,.14),inset 0 1px 5px 0 rgba(67,74,100,.12),inset 0 3px 1px -2px rgba(67,74,100,.2)
+                .ratio_range_box {
+                  display flex
+                  align-items center
+                  .marke_range {
+                    flex 7
+                  }
+                  .marker_min,.marker_max {
+                    flex 1.5
+                  }
+                  .marker_max {
+                    text-align right
+                  }
+                }
+              }
+            }
+            .betcenter-action {
+              display flex
+              flex 1
+              justify-content center
+              align-items center
+              min-height 11rem
+              .betcenter_action_btns {
+                flex-direction column
+                width 12rem
+                height 12rem
+                padding .5rem
+                background #e5e5e5
+                font-size 1.5rem
+                border-radius 9.5rem
+                box-shadow inset 0 2px 2px 0 rgba(67,74,100,.14),inset 0 1px 5px 0 rgba(67,74,100,.12),inset 0 3px 1px -2px rgba(67,74,100,.2)
+                transition background .15s cubic-bezier(.4,0,.2,1)
+                .betcenter_action_btn {
+                  width 11rem
+                  height 5.4rem
+                  color #434a64
+                  background #f2f2f2
+                  background-size 100% 150%
+                  background-position bottom
+                  font-size 1.5rem
+                  box-shadow 0 4px 5px 0 rgba(67,74, 100,.14),0 1px 10px 0 rgba(67,74,100,.12),0 2px 4px -1px rgba(67,74,100,.4)
+                  transition background-position .15s cubic-bezier(.4,0,.2,1)
+                  &[data-position=top] {
+                    padding-top 1.25rem
+                    margin-bottom .125rem
+                    background linear-gradient(180deg, #f2f2f2 0, #fff 51%, #f2f2f2)
+                    border-top-left-radius 6.5rem
+                    border-top-right-radius 6.5rem
+                  }
+                  &[data-position=bottom] {
+                    padding-bottom 1.25rem
+                    margin-top 0.125rem
+                    background linear-gradient(180deg, #f2f2f2 0, #fff 51%, #f2f2f2)
+                    border-bottom-left-radius 6.5rem
+                    border-bottom-right-radius 6.5rem
+                  }
+                  &[disabled] {
+                    color #ccc
+                    cursor default
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+  .refreshActive {
+    transition transform 500ms linear
+    transform rotate(360deg)
+  }
+
+  @keyframes load {
+    0% {
+      background #feb505
+    }
+    100% {
+      background #777
+    }
+  }
+
+</style>

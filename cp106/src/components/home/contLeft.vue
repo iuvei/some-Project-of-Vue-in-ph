@@ -1,0 +1,388 @@
+<template>
+    <div class="cont-left">
+        <div class="cont-left-top">
+             <ul>
+                 <li @click="go_betting_id(0,indexs,items.lot_type_id,items.code,items.name)" v-if="items.is_hot == 1" v-for="(items ,indexs) in cp_data_list" :key="items.lot_type_id"> 
+                     
+                     <!-- <img :src="items.pic" :alt="items.name">   -->
+                    <img src="../../image/cp_icon/chongqinshishicai.png" v-if="items.lot_type_id == 1" :alt="items.name">
+                    <img src="../../image/cp_icon/sanfeishishicai.png" v-if="items.lot_type_id == 13" :alt="items.name">
+                    <img src="../../image/cp_icon/jing_pk.png" v-if="items.lot_type_id == 5" :alt="items.name">
+                    <img src="../../image/cp_icon/san_pk.png" v-if="items.lot_type_id == 14" :alt="items.name">
+                    <img src="../../image/cp_icon/liuhecai.png" v-if="items.lot_type_id == 23" :alt="items.name">
+                    <img src="../../image/cp_icon/shishile.png" v-if="items.lot_type_id == 19" :alt="items.name">
+                    <img src="../../image/cp_icon/xin_shishicai.png" v-if="items.lot_type_id == 7" :alt="items.name">
+                    <img src="../../image/cp_icon/tianjinshishicai1.png" v-if="items.lot_type_id == 16" :alt="items.name">
+                    <img src="../../image/cp_icon/guangdong.png" v-if="items.lot_type_id == 6" :alt="items.name">
+                    <img src="../../image/cp_icon/shandong.png" v-if="items.lot_type_id == 15" :alt="items.name">
+                    <img src="../../image/cp_icon/shanghai.png" v-if="items.lot_type_id == 17" :alt="items.name">
+                    <img src="../../image/cp_icon/jiangxi.png" v-if="items.lot_type_id == 18" :alt="items.name">
+                    <img src="../../image/cp_icon/wan_kuaisan.png" v-if="items.lot_type_id == 8" :alt="items.name">
+                    <img src="../../image/cp_icon/su_kuaisan.png" v-if="items.lot_type_id == 9" :alt="items.name">
+                    <img src="../../image/cp_icon/gui_kuaisan.png" v-if="items.lot_type_id == 20" :alt="items.name">
+                    <img src="../../image/cp_icon/3d.png" v-if="items.lot_type_id == 2" :alt="items.name">
+                    <img src="../../image/cp_icon/pailei3.png" v-if="items.lot_type_id == 11" :alt="items.name">
+                    <img src="../../image/cp_icon/jing_28.png" v-if="items.lot_type_id == 22" :alt="items.name">
+                    <img src="../../image/cp_icon/xing_28.png" v-if="items.lot_type_id == 21" :alt="items.name">
+                    <img src="../../image/cp_icon/js_liuhecai.png" v-if="items.lot_type_id == 24" :alt="items.name">
+                    <img src="../../image/cp_icon/fenfenshishicai.png" v-if="items.lot_type_id == 25" :alt="items.name">
+                    <img src="../../image/cp_icon/js_pk_shi.png" v-if="items.lot_type_id == 26" :alt="items.name">
+                     
+                     <span>{{ items.name }}</span> </li>
+             </ul>
+
+             <div class="gaopin_cai" @mouseenter="show_gaopin=true" @mouseleave="show_gaopin=false">
+
+                 <p class="clearfix" style="margin-top:5px;">
+                    <span>高</span>
+                    <span>频</span>
+                    <span>彩</span>
+                 </p>
+
+                 <dl style="over-flow:hidden;height:60px;margin-bottom:19px;">
+                     <li @click="go_betting_id(1,indexs,items.lot_type_id,items.code,items.name)" v-if="items.frequency == 0 && indexs < 15 " v-for="(items ,indexs) in cp_data_list" :key="items.lot_type_id">  {{ items.name }} </li>
+                 </dl>
+
+                 <div class="gaopin_sprite" v-show="show_gaopin">
+                     <h3>高频彩</h3>
+                     <ul>
+                        <li @click="go_betting_id(1,indexs,items.lot_type_id,items.code,items.name)" v-if="items.frequency == 0" v-for="(items ,indexs) in cp_data_list" :key="items.lot_type_id"> {{ items.name }}  </li>
+                     </ul>
+                 </div>
+             </div>
+             <div class="dipin_cai">
+                  <p class="clearfix" style="margin-top:6px;margin-bottom:6px;">
+                    <span>低</span>
+                    <span>频</span>
+                    <span>彩</span>
+                 </p>
+
+                 <!-- <dl style="height:60px; over-flow:hidden;margin-bottom:20px;"> -->
+                 <dl >
+                     <li@click="go_betting_id(2,indexs,items.lot_type_id,items.code,items.name)" v-if="items.frequency == 1" v-for="(items ,indexs) in cp_data_list" :key="items.lot_type_id"> {{ items.name }}  </li>
+                 </dl>
+             </div>
+             <div class="all_cai" @mouseenter="show_all=true" @mouseleave="show_all=false" style="padding-bottom:2px;">
+                 <p>
+                    <span>全</span>
+                    <span>部</span>
+                 </p>
+
+                 <dl>
+                     <li @click="go_betting_id(2,indexs,items.lot_type_id,items.code,items.name,items.is_hot,items.frequency)" v-if="indexs < 4" v-for="(items,indexs) in cp_data_list" :key="indexs">{{ items.name }}</li>
+                 </dl>
+
+                 <div class="gaopin_sprite gaopin_all" v-show="show_all" style="margin-top:-20px;">
+                     <h3>全部</h3>
+                     <ul>
+                        <li  @click="go_betting_id(2,indexs,items.lot_type_id,items.code,items.name,items.is_hot,items.frequency)"  v-for="(items,indexs) in cp_data_list" :key="items.code">{{ items.name }}</li>
+                     </ul>
+                 </div>
+             </div>
+        </div>
+        <SmallBet></SmallBet>
+    </div>
+</template>
+
+
+
+<script>
+    import  SmallBet from './smallBet.vue'
+    import { requestOpt , el_tip} from '../../api/recommend'
+    import { messageBox } from 'element-ui';
+    export default{
+        name : 'ContLeft',
+        components:{
+            SmallBet
+        },
+        data(){
+            return{
+                show_gaopin: false,
+                show_all:false,
+                page: 1,
+                type2:-1,
+                is_hot: -1,
+                cp_data_list:[],
+                tall_cp_list:[],
+                short_cp_list:[],
+            }
+        },
+        methods :{
+
+            get_hot_list(){
+                this.cp_data_list = JSON.parse(sessionStorage.getItem('cp_data_list'));
+                if( !this.cp_data_list){
+                    requestOpt.reqnoGetpara('betting_list_v1',
+                        {
+                            page: '1',
+                            frequency:'-1',
+                            is_hot : '-1'
+                        },
+                        (res)=>{
+                            if(res.data.status == 1  || res.status == 200){
+                                this.cp_data_list = res.data.data.list;
+                                sessionStorage.setItem('cp_data_list',JSON.stringify(res.data.data.list));
+                            }else if(res.data.status == 0 && res.data.code == -2){
+                                el_tip(res.data.msg + ' 请重新登录');
+                                sessionStorage.removeItem('user')
+                                setTimeout(()=>{
+                                    window.location.reload();
+                                    this.$root.bus.$emit("sendData",true);
+                                },1000)
+                            }else{
+                                el_tip(res.data.msg);
+                            }
+                           
+                        },
+                        (err)=>{
+                            if(err){
+                              el_tip(err.data.msg)
+                            }
+                    })
+                }
+            
+                // setTimeout(function(){
+                //    this.cp_data_list =  window.All;
+                //    console.log(this.cp_data_list);
+                // },50)
+            },
+            go_betting_id(p_i,c_i,id,code,lotName,is_hot,frequency){
+
+                if(is_hot == 1){
+                    p_i = 0;
+                }
+
+                if(frequency == 0){
+                    p_i = 1;
+                }
+                if(frequency == 1){
+                    p_i = 2;
+                }
+
+                if(code.indexOf('28') != -1){
+                     p_i = 3;
+                }
+                let obj = {};
+                obj.p_i = p_i;
+                obj.c_i = c_i;
+                obj.id = id;
+                obj.code = code;
+                obj.lotName = lotName;
+                window.sessionStorage.setItem('lotId', id);
+                sessionStorage.setItem('cp_title', lotName);
+                this.$root.bus.$emit('send_bet_tab_num',obj);
+                this.$router.push('/betcenter');
+
+            }
+           
+        },
+        mounted(){
+            this.get_hot_list();
+        }
+    }
+
+</script>
+
+<style >
+
+    /* 背景 */
+    .cont-left-top{
+        background: #fff;
+    }
+
+    /* 列表 */
+    .cont-left{
+        width:218px;
+        float: left;
+    }
+
+    .cont-left-top{
+            border: 1px solid #0047aa;
+            border-top:none;
+    }
+
+    .cont-left-top >ul {
+        height: 400px;
+        /* overflow-y: scroll; */
+    }
+
+    /* .cont-left-top >ul::-webkit-scrollbar {display:none} */
+     .cont-left-top>ul li{
+         height: 50px;
+         padding: 5px 20px;
+         /* text-align: center; */
+         line-height: 40px;
+         font-size: 16px;
+         color: #4c4c4c;
+         font-weight: 900;
+         position: relative;
+         cursor: pointer;
+         
+     }
+
+     .cont-left-top>ul li img{
+         width: 36px;
+         height: 36px;
+         vertical-align: middle;
+         position: absolute;
+         left: 15px;
+         top:7px;
+         border-radius:50%;
+         
+     }
+
+     .cont-left-top>ul li span{
+         position: absolute;
+         left: 60px;
+         /* top:7px; */
+     }
+
+        /* 高频彩 */  
+        /* 低频彩 */
+
+        .gaopin_cai, .dipin_cai, .all_cai{
+            padding-left: 15px;
+            border-top:1px solid #ddd;
+            border-bottom:1px solid #ddd;
+           
+            position: relative;
+            z-index: 12;
+            background: #fff;
+        }
+
+        .gaopin_cai::before , .all_cai::before{
+            display: inline-block;
+            content: "";
+            width: 15px;
+            height: 15px;
+            background: url('../../image/arrow_right.png') no-repeat center / cover ;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            /* margin-top: -7.5px; */
+        }
+       
+        .dipin_cai{
+            border-top: none;
+            border-bottom: none;
+        }
+       .cont-left-top div.dipin_cai dl li{
+            padding-top:5px;
+            padding-bottom:5px;
+            display: inline-block;
+            float: left;
+            width:50%;
+            font-size: 14px;
+            cursor: pointer;
+            color: #000;
+        }
+        .gaopin_cai>p , .dipin_cai>p , .all_cai>p{
+            float: left;
+            border:1px solid #f26921;
+            padding: 5px 8px;
+            border-radius: 8px;
+            margin-top:10px;
+            /* margin-right: 10px; */
+        }
+
+         .gaopin_cai p{
+
+        }
+         .gaopin_cai p span, .dipin_cai p span, .all_cai p span{
+             display: block;
+             color: #f26921;
+         }
+         .gaopin_cai p span:nth-child(1), .gaopin_cai p span:nth-child(2){
+             margin-bottom: 3.5px;
+         }
+         .dipin_cai p span:nth-child(1), .dipin_cai p span:nth-child(2){
+             margin-bottom: 3.5px;
+         }
+         .all_cai p span:nth-child(1), .all_cai p span:nth-child(2){
+             margin-bottom: 3.5px;
+         }
+
+
+        .gaopin_cai dl , .dipin_cai dl , .all_cai dl{
+            float: right;
+            width:75%;
+            margin-top:10px;
+        }
+
+        .gaopin_cai dl li , .all_cai dl li{
+            display: inline-block;
+            float: left;
+            width:50%;
+            font-size: 14px;
+            cursor: pointer;
+            color: #000;
+            padding:10px 0;
+           
+        }
+
+        .gaopin_cai dl li:hover , .dipin_cai dl li:hover , .all_cai dl li:hover{
+            color: #0047aa;
+        }
+
+        .gaopin_cai::after , .dipin_cai::after , .all_cai::after{
+            display: block;
+            content: "";
+            height: 0;
+            line-height:0;
+            visibility: hidden;
+            clear: both;
+        }
+
+        /* 全部彩 */
+        .all_cai p{
+            margin-top:17px;
+        }
+
+        /* 高频彩 滑动门 */
+        .gaopin_sprite{
+            position: absolute;
+            right: -642px;
+            background:#fff;
+            border: 1px solid #0047aa;
+            padding: 10px 0;
+            z-index: 12;
+            /* border-left: 2px solid #0047aa; */
+        }
+        .gaopin_sprite h3{
+           padding: 5px 20px;
+        }
+        .gaopin_sprite ul {
+            width: 640px;
+            transform: translateX(20px);
+        }
+        .gaopin_sprite ul::after{
+            display: block;
+            content: "";
+            height: 0;
+            line-height: 0;
+            visibility: hidden;
+            clear: both;
+        }
+
+        .gaopin_sprite ul li{
+            float: left;
+            width: 20%;
+            font-size: 13px;
+            color: #000;
+            padding: 5px 0px;
+            cursor: pointer;
+        }
+
+        .gaopin_sprite ul li:hover{
+            color: #0047aa;
+        }
+
+        /* 高频彩hover效果 */
+        .gaopin_cai:hover{
+
+            border-top:1px solid #0047aa;
+            border-bottom:1px solid #0047aa;
+            background: #fff;
+            /* border-right:2px solid #fff; */
+        }
+</style>

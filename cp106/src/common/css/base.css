@@ -1,0 +1,133 @@
+html,
+body,
+ul,
+ol,
+li,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+img,
+input {
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: normal;
+}
+
+input,
+img {
+  border: 0;
+}
+
+input,button {
+  border: 0;
+  background: #fff ;
+  outline: none;
+}
+
+a, a:active, a:focus, a:hover, button, button:active, button:focus, button:hover, input, input:active, input:focus, input:hover {
+  outline: 0;
+}
+
+button {
+  cursor: pointer;
+}
+button[disabled] {
+  cursor: not-allowed;
+}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+*,:before,:after {
+  box-sizing: border-box;
+}
+
+ul,dl,ol {
+  list-style: none;
+}
+
+body {
+  font-size: 14px;
+  color: #434343;
+  font-family: "Microsoft YaHei";
+  /* -moz-user-select:none;
+  -webkit-user-select:none;
+  -ms-user-select:none;
+  -khtml-user-select:none;
+  user-select:none; */
+  /*background: #FFFFFF;*/
+}
+
+.clearfix:after {
+  content: "";
+  height: 0;
+  line-height: 0;
+  display: block;
+  visibility: hidden;
+  clear: both;
+}
+
+.clearfix {
+  zoom: 1;
+}
+
+a {
+  color: #434343;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0266A3;
+}
+
+.fl {
+  float: left;
+}
+
+.fr {
+  float: right;
+}
+
+/*
+
+::-webkit-scrollbar {
+    width:18px;
+    height: 5px;
+
+    }
+
+    ::-webkit-scrollbar-button {
+    width: 18px;
+    height: 5px;
+
+
+    }
+
+    ::-webkit-scrollbar-track {
+    border-radius: 0px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+    background:  rgba(0,0,0,.2);
+    border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+    background:  rgba(0,0,0,.2);
+    }
+*/
+
+
+
+

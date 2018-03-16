@@ -1,0 +1,119 @@
+<template>
+    
+    <div class="top_tab">
+        <div class="tab-cont">
+            <ul class="tab-cont-ul">
+                <router-link to="" v-show="this.$route.path == '/'">
+                  <li class="first_li" style="width:230px;" @mouseenter="first_li_enter" > 选择彩种</li>
+                </router-link>
+                <router-link to="/">
+                  <li @click="switch_class"> 首页</li>
+                </router-link>
+
+                <router-link to="/betcenter">
+                    <li @click="switch_class" > 购彩大厅</li>
+                </router-link>
+
+                <router-link to="/mobilesite">
+                     <li @click="switch_class" > 手机购彩 </li>
+                </router-link>
+                <router-link to="/promotions">
+                     <li @click="switch_class" > 优惠活动</li>
+                </router-link>
+
+                <router-link to="/lottery">
+                      <li @click="switch_class" > 开奖公告 </li>
+                </router-link>
+
+                <router-link to="/trendpage">
+                      <li @click="switch_class" > 走势图标 </li>
+                </router-link>
+            </ul>
+        </div>
+    </div>
+
+</template>
+
+<script>
+
+    export default{
+        props:["tabNum"],
+        name: 'TopTab',
+        components:{
+            
+        },
+        data(){
+            return{
+            }
+        },
+        methods:{   
+          switch_class(){
+               let lis = document.querySelector('.tab-cont-ul').children;
+               for(var i = 1; i < lis.length; i++){
+                   lis[i].classList.remove('active');
+               }
+               if(this.tabNum){
+                   lis[this.tabNum].children[0].classList.add('active');
+               }
+          },
+          first_li_enter(){
+              document.querySelector('.first_li').style.background='#0047aa';
+          }
+
+       
+        },
+        mounted(){
+            this.switch_class();
+        },
+        created(){
+        }
+    }
+    
+</script>
+
+
+<style scoped>
+
+.top_tab{
+
+    width:100%;
+    height: 4.2rem;
+    background: #0047aa;
+}
+
+.tab-cont{
+    margin: 0 auto;
+}
+.tab-cont, .tab-cont  ul{
+    width: 1200px;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    /* padding-left: 80px; */
+}
+
+
+.tab-cont  ul a, .tab-cont  ul li{
+    /* width: 150px; */
+    flex:1;
+    height: 100%;
+    line-height: 4.2rem;
+    text-align: center;
+    /* float: left; */
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.tab-cont  ul li:hover{
+    background: #001c44;
+}
+
+/* .tab-cont  ul  .first_li:hove{
+    background: #0047aa;
+} */
+
+.tab-cont  ul li.active{
+    background: #001c44;
+}
+</style>

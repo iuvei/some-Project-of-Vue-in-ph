@@ -1,0 +1,476 @@
+<template>
+    
+    <div class="qiandao" v-if="is_show_qian_dao">
+        <div class="qiandao_cont" v-show="is_show_qian_dao_son">
+            <div class="qiandao_cont_head">
+                <h4>签到有礼</h4>
+                <p>天天签到有惊喜</p>
+            </div>
+            <div class="qiandao_cont_yuan"></div>
+            <ul>
+                <li :class="{'has_qian' : 1 <= qian_dao_data.total_day  }"><strong class="first-strong"></strong><span >第一天</span> <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[0]}}元</i></li>
+                <li :class="{'has_qian' : 2 <= qian_dao_data.total_day  }"><strong></strong><span>第二天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[1]}}元</i></li>
+                <li :class="{'has_qian' : 3 <= qian_dao_data.total_day  }"><strong></strong><span>第三天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[2]}}元</i></li>
+                <li :class="{'has_qian' : 4 <= qian_dao_data.total_day  }"><strong></strong><span>第四天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[3]}}元</i></li>
+                <li :class="{'has_qian' : 5 <= qian_dao_data.total_day  }"><strong></strong><span>第五天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[4]}}元</i></li>
+                <li :class="{'has_qian' : 6 <= qian_dao_data.total_day  }"><strong></strong><span>第六天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[5]}}元</i></li>
+                <li :class="{'has_qian' : 7 <= qian_dao_data.total_day  }"><strong ></strong><span>第七天</span > <i v-if="qian_dao_data.rewards">+{{qian_dao_data.rewards[6]}}元</i></li>
+            </ul>
+            <h5 @click="qian_dao" class="qian_dao_btn" v-loading="loading1">签到领取</h5>
+        </div>
+        <div class="qiandao_bet" v-show="is_show_bet">
+            <img src="../../image/qiandao_bet_1.png" alt="qiandao_bet_1" ondragstart="return false;">
+            <img src="../../image/qiandao_bet_2.png" alt="qiandao_bet_2" ondragstart="return false;">
+            <p v-if="qian_dao_data.rewards">恭喜你+{{ qian_dao_data.rewards[qian_dao_data.total_day] }}元</p>
+            <img src="../../image/close_qiandao.png" alt="close_qiandao" @click="close_bet" ondragstart="return false;">
+        </div>
+    </div>
+
+</template>
+
+<script>
+    import { requestOpt, el_tip } from '../../api/recommend'
+    import { messageBox , Dialog , Loading} from 'element-ui';
+    export default{
+        name : 'Qiandao',
+        data(){
+            return{
+                is_show_qian_dao:false,
+                is_show_qian_dao_son: true,
+                user : '',
+                qian_dao_data:[],
+                is_show_bet: false,
+                total_bet : '',
+                
+                loading1:false,
+                user :'',
+            }
+        },
+        methods:{
+            startFn(){
+               document.body.style.overflow = 'hidden';  
+               document.querySelector('.qiandao_cont').classList.add('box_start');
+                this.user = JSON.parse(sessionStorage.getItem('user'));
+                if( this.user){
+                    requestOpt.reqGet('sign',this.user.token,
+                        (res)=>{
+                            if(res.data.status == 1 || res.status == 200){
+                              this.qian_dao_data = res.data.data;
+                            }else if(res.data.status == 0 && res.data.code == -2){
+                                el_tip(res.data.msg + ' 请重新登录');
+                                sessionStorage.removeItem('user')
+                                setTimeout(()=>{
+                                    window.location.reload();
+                                    this.$root.bus.$emit("sendData",true);
+                                },1000)
+                            }else{
+                                el_tip(res.data.msg);
+                            }
+                        },
+                        
+                        (err)=>{
+                            if(err){
+                                el_tip(err.data.msg);
+
+                            }else{
+                              el_tip('网络连接失败');
+                            }
+                    })
+                }
+               
+            },
+            qian_dao(){
+                this.loading1 = true;
+                 requestOpt.reqGet('sign_up',this.user.token,
+                        (res)=>{
+                            el_tip(res.data.msg)
+                            console.log(res);
+                            if(res.data.status == 1){
+                                this.total_bet = res.data.data.total_day;
+                                // this.has_done_clas = true;
+                                document.querySelector('.qiandao_cont').style.transform = 'translate(-50%,100%)';
+                                setTimeout(()=>{
+                                    // this.is_show_qian_dao_son = false;
+                                    this.is_show_bet = true
+                                    this.loading1=false;
+                                },700)
+
+                                setTimeout(()=>{
+                                    this.is_show_bet  = false;
+                                    document.body.style.overflow = 'auto'; 
+                                    this.is_show_qian_dao = false;
+                                },5000)
+
+                                this.refresh_blance();   
+                            }else if(res.data.status == 0 && res.data.code == -2){
+
+                                el_tip(res.data.msg + ' 请重新登录');
+                                sessionStorage.removeItem('user')
+                                setTimeout(()=>{
+                                    window.location.reload();
+                                    this.$root.bus.$emit("sendData",true);
+                                },1000)
+                            }else{
+                                el_tip(res.data.msg);
+                            }
+                            this.loading1=false;
+                        },
+                        
+                        (err)=>{
+                            if(err){
+                                el_tip(err.data.msg);
+                            }else{
+                                el_tip('网络连接失败')
+                            }
+                    })
+
+            },
+            receive_status(){
+                this.$root.bus.$on('send_qiandao_status', (flag)=>{
+                this.is_show_qian_dao = flag;
+                    if(flag){
+                        setTimeout(()=>{
+                        this.startFn();
+                        },50)
+                        this.is_show_qian_dao_son = true;
+                    }
+               
+                });
+            },
+            close_bet(){
+                this.is_show_bet = false;
+                document.body.style.overflow = 'auto'; 
+                this.is_show_qian_dao = false; 
+            },
+            // 刷新余额
+            refresh_blance(){
+                this.$root.bus.$emit('send_yu_e_late',true);
+            }
+
+        },
+        mounted(){
+            this.receive_status();
+        },
+        filters:{
+            transWord(value){
+                value = value == 1 ? '一' : value;
+                value = value == 2 ? '二' : value;
+                value = value == 3 ? '三' : value;
+                value = value == 4 ? '四' : value;
+                value = value == 5 ? '五' : value;
+                value = value == 6 ? '六' : value;
+                value = value == 7 ? '七' : value;
+                return value;
+            }
+        }
+
+    }
+
+</script>
+
+<style scoped>
+
+    /* 签到红色背景部分 */
+    .qiandao{
+        /* width:100%; */
+        z-index:10000;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        overflow: auto;
+        margin: 0;
+        background:rgba(0,0,0,.6);
+    }
+
+    /* .qiandao_cont.done_it{
+         animation: qian_dao_down .5s ease-out 1;
+    } */
+
+    .qiandao_cont{
+        width: 30%;
+        /* height: 70%; */
+        margin:0 auto;
+        position: absolute;
+        left:50%;
+        top:50%;
+        transform: translate(-50%,-50%);
+        border-radius: 20px;
+        padding-bottom: 20px;
+        background:#fff;
+        transition: all .7s;
+        animation: qian_dao_move .7s ease 1;
+        /* transform: translate(-100%); */
+    }
+
+    .qiandao_cont.box_end{
+        animation: qian_dao_move .8s ease 1;
+    }
+    
+    @keyframes qian_dao_move {
+        from{
+            transform: translate(-50%,-200%);
+            opacity: 0;
+        }
+        to{
+            transform: translate(-50%,-50%);
+            opacity: 1;
+        }
+    }
+
+     @keyframes qian_dao_down {
+        
+        from{
+            transform: translate(-50%,-50%);
+            opacity: 1;
+        }
+        to{
+            transform: translate(-50%,100%);
+            opacity: 0;
+        }
+
+    }
+
+    .qiandao_cont_head{
+        background: #d13a48;
+        position: relative;
+        /* border-radius-: 20px; */
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+    }
+    .qiandao_cont_head>h4{
+        font-size: 23px;
+        padding-top:30px;
+        letter-spacing: 5px;
+        
+    }
+
+    .qiandao_cont_head>p{
+        font-size: 16px;
+        letter-spacing: 2px;
+        padding-top:10px;
+    }
+    .qiandao_cont_head>h4, .qiandao_cont_head>p{
+        color : #fff;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .qiandao_cont_head::before,  .qiandao_cont_head::after{
+        content: "";
+        display: inline-block;
+        width:14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #333;
+        position: absolute;
+        top:15px;
+        
+    }
+
+    .qiandao_cont_head::before{
+        left:15px;
+    }
+    .qiandao_cont_head::after{
+        right:15px;
+    }
+
+    .qiandao_cont_yuan{
+        width: 100%;
+        height: 60px;
+        margin-top:-30px;
+         background: #d13a48;
+         /* border-radius: 50%; */
+         border-bottom-left-radius: 80%;
+         border-bottom-right-radius: 80%;        
+    }
+
+    /* 白色背景部分 */
+    .qiandao_cont ul{
+        padding-top:20px;
+    }
+    .qiandao_cont ul li{
+        text-align: center;
+    }
+    .qiandao_cont ul li strong, .qiandao_cont ul li span{
+        margin-right: 30px;
+    }
+
+    .qiandao_cont ul li strong{
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff17d;
+        vertical-align: middle;
+        position: relative;
+    }
+
+    .qiandao_cont ul li strong::after{
+
+        content: "";
+        display: inline-block;
+        width:5px;
+         height:31.5px;
+         background: #fff17d;
+         position: absolute;
+         /* bottom: -32px; */
+         top:-31.5px;
+         left: 50%;
+         transform: translateX(-50%); 
+
+    }
+
+    .qiandao_cont ul li .first-strong::after{
+        display: none;
+    }
+
+    .qiandao_cont ul li span{
+        color : #adadad;
+        padding-left: 5px;
+        font-size: 15px;
+    }
+    .qiandao_cont ul li i{
+        color : #eab3b7;
+        font-style: normal;
+        line-height: 50px;
+        padding-left: 2px;
+        font-size: 15px;
+    }
+
+    /* 已经签到的有has_qian类名的 */
+
+    .qiandao_cont ul li.has_qian strong{
+
+         background : #d23b49;
+    }
+
+    .qiandao_cont ul li.has_qian strong::after{
+        background : #d23b49;
+    }
+
+    .qiandao_cont ul li.has_qian span{
+
+        color : #000;
+         font-weight: 600;
+    }
+    .qiandao_cont ul li.has_qian i{
+        font-weight: 600;
+        color:  red;
+        /* font-weight: 700; */
+    }
+
+    .qian_dao_btn{
+        width: 100px;
+        margin: 0 auto;
+        height: 35px;
+        line-height: 35px;
+        text-align: center;
+        background: #fff17d;
+        border-radius: 10px;
+        margin-top:10px;
+        color : #d13a48;
+        cursor:pointer;
+        font-size: 15px;
+    }
+
+    /* 签到后的奖励 */
+
+    .qiandao_bet{
+        width:35%;
+        margin: 0 auto;
+        position: absolute;
+        top:50%;
+        left:50%;
+        transform: translate(-50%,-60%);
+        animation: do_bet_move .8s ease-in 1;
+    }
+
+      @keyframes do_bet_move {
+        
+        0%{
+            transform: translate(-50%,200%) scale(0,0);
+            opacity: 0;
+            
+        }
+        10%{
+            transform: translate(-50%,175%) scale(.1,.1);
+            opacity: 0.1;
+            
+        }
+        20%{
+            transform: translate(-50%,150%) scale(.3,.3);
+            opacity: 0.2;
+            
+        }
+        30%{
+            transform: translate(-50%,120%) scale(.6,.6);
+            opacity: .3;
+            
+        }
+        40%{
+            transform: translate(-50%,90%) scale(.9,.9);
+            opacity: .4;
+            
+        }
+        60%{
+            transform: translate(-50%,65%) scale(1,1);
+            opacity: .6;
+            
+        }
+        85%{
+            transform: translate(-50%,30%) scale(1.15,1.15);
+            opacity: .8;
+            
+        }
+        90%{
+            transform: translate(-50%,0%) scale(1.08,1.08);
+            opacity: 1;
+            
+        }
+        95%{
+            transform: translate(-50%,-30%) scale(1.15,1.15);
+            opacity: 1;
+            
+        }
+        100%{
+            transform: translate(-50%,-50%) scale(1,1);
+            opacity: 1;
+        }
+
+    }
+
+
+    .qiandao_bet>img{
+        width:100%;
+        
+    }
+
+    .qiandao_bet>img:nth-child(2){
+        width: 60%;
+        position: absolute;
+        left:20%;
+        top:70%;
+    }
+    .qiandao_bet>p:nth-child(3){
+        width: 60%;
+        position: absolute;
+        left:20%;
+        top:70%;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        color : #d62020;
+        font-size: 25px;
+    }
+    .qiandao_bet>img:nth-child(4){
+        width: 10%;
+        cursor: pointer;
+        position: absolute;
+        left: 45%;
+        margin-top:50px;
+    }
+   
+</style>
+

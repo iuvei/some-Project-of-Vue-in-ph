@@ -1,0 +1,13 @@
+<!DOCTYPE html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><script src=https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js></script><title>至尊彩票</title><meta http-equiv=pragma content=no-cache><meta http-equiv=Cache-Control content=no-cache><meta http-equiv=expires content="Wed, 26 Feb 1997 08:21:57 GMT"><link href=./app.ef778029642df0573d2f3979408a3dcf.css rel=stylesheet></head><body><div id=app></div><script>window.$ = $;
+
+        if (!Object.values) Object.values = function(obj) {
+          if (obj !== Object(obj))
+            throw new TypeError('Object.values called on a non-object');
+          var val=[],key;
+          for (key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj,key)) {
+              val.push(obj[key]);
+            }
+          }
+          return val;
+        }</script><script type=text/javascript src=./static/js/manifest.3ad1d5771e9b13dbdad2.js></script><script type=text/javascript src=./static/js/vendor.a88c850f38e6b8c840f5.js></script><script type=text/javascript src=./static/js/app.c926806fe2de993b8020.js></script></body></html>

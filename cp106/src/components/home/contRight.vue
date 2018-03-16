@@ -1,0 +1,365 @@
+<template>
+    <div class="cont-right">
+        <div class="cont-right-top">
+            <Swiper></Swiper>
+        </div>
+
+        <div class="cont-right-bot">
+            <div class="cont-right-bot-left">
+                <TabSwitch></TabSwitch>
+                <div class="xin_shou_zhi_nan">
+                    <h3>新手指南</h3>
+                    <ul style="">
+                        <li @click="go_help(index)" v-for="(item,index) in title_arr" :key="index"> 关于{{ item }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="cont-right-bot-right">
+                <h3>彩票走势图</h3>
+                <div class="cont-right-bot-right-cpzs">
+                    <img src="../../image/prediction_map.8bdb2f9f.png" ondragstart="return false" alt="彩票走势图" @click="go_trend">
+                </div>
+
+                <!-- 中奖排行榜 -->
+                <div class="cont-right-bot-right-zjphb" >
+                    <h4>中奖排行版</h4>
+                    <ul>
+                        <li>用户名</li>
+                        <li>奖金</li>
+                        <li>彩种</li>
+                    </ul>
+                    <div>
+                        <table>
+                            <tbody>
+                                <tr v-for="(items, indexs) in zj_arr_data" :key="indexs">
+                                    <td> {{ items.phone | slic }} </td>
+                                    <td> {{ items.winning_money }}元 </td>
+                                    <td> {{ items.lot_name }} </td>
+                                </tr>
+                            
+                            </tbody>
+                        </table>
+                    </div>
+                   
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>
+
+
+<script>
+
+    import Swiper from '../swiper/swiper'
+    import TabSwitch from '../home/tabSwitch.vue'
+    import { requestOpt, el_tip } from '../../api/recommend'
+    import { messageBox } from 'element-ui';
+    export default{
+        name : 'ContLeft',
+        components:{
+             Swiper,
+             TabSwitch,
+        },
+        data(){
+             return{
+                 show_enter_div : true,
+                  zj_arr_data:[],
+                  title_arr:[],
+                  help_data:[]
+             }
+        },
+        methods:{
+            getData(){
+                this.zj_arr_data = JSON.parse(sessionStorage.getItem('zj_arr_data'));
+                if(!this.zj_arr_data){
+                    requestOpt.reqnoGet('latest_luckys',
+                            (res)=>{
+                                if(res.data.status == 1 || res.status == 200){
+                                    this.zj_arr_data = res.data.data.list;
+                                    sessionStorage.setItem('zj_arr_data', JSON.stringify(res.data.data.list));
+                                }else if(res.data.status == 0 && res.data.code == -2){
+                                    el_tip(res.data.msg + ' 请重新登录');
+                                    sessionStorage.removeItem('user')
+                                    setTimeout(()=>{
+                                        window.location.reload();
+                                        this.$root.bus.$emit("sendData",true);
+                                    },1000)
+                                }else{
+                                    el_tip(res.data.msg);
+                                }
+                                
+                            },
+                            
+                            (err)=>{
+                                if(err.data.msg){
+                                     
+                                    el_tip(err.data.msg)
+                                }
+                        })
+                    }
+            },
+
+            go_trend(){
+                this.$router.push('./trendpage')
+            },
+
+            get_help_data(){
+                // setTimeout(()=>{
+                    this.help_data =  JSON.parse(localStorage.getItem('help_data_list'));
+                    for(var k in this.help_data){
+                        this.title_arr.push(k);
+                    }
+
+                    if(!this.help_data  || !this.title_arr){
+                        requestOpt.reqnoGet('help_list',
+                            (res)=>{
+                                if(res.data.status == 1 || res.status == 200){
+                                    this.help_data = res.data.data.list;
+                                
+                                    for(var k in res.data.data.list){
+                                        this.title_arr.push(k);
+                                    }
+                                    localStorage.setItem('help_data_list', JSON.stringify(res.data.data.list));
+                                    // sessionStorage.setItem('title_arr',JSON.stringify(this.title_arr));
+                                }else if(res.data.status == 0 && res.data.code == -2){
+                                    el_tip(res.data.msg + ' 请重新登录');
+                                    sessionStorage.removeItem('user')
+                                    setTimeout(()=>{
+                                        window.location.reload();
+                                        this.$root.bus.$emit("sendData",true);
+                                    },1000)
+                                }else{
+                                    el_tip(res.data.msg);
+                                }
+                            }, 
+                            
+                            (err)=>{
+                                if(err.data){
+                                     
+                                    el_tip(err.data.msg)
+                                }
+                        })
+                    }
+
+
+                // },30)
+                // this.title_arr = JSON.parse(localStorage.getItem('title_arr'));
+              
+              
+            },
+            go_help(index){
+                this.$root.bus.$emit('send_help_tab',index)
+                this.$router.push('/helpcenter');
+            }
+        },
+        created(){
+
+        },
+        mounted(){
+            this.getData();
+            this.get_help_data();
+        },
+        filters :{
+
+            slic (val){
+                if (!val){ return }
+                val = val.substr(0,3) + '***'
+                return val
+            }
+
+        }
+
+    }
+
+</script>
+
+<style scoped>
+
+    .cont-right-bot-left{
+        margin-top:10px;
+    }
+    .xin_shou_zhi_nan{
+        padding-bottom:12px;
+    }
+    .cont-right{
+        float: right;
+        width: 980px;
+        padding: 10px 0px 10px 10px;
+        box-sizing: border-box;
+    }
+
+    .xin_show_zhi_nan{
+        width: 100%;
+        background: #fff;
+    }
+
+    .cont-right-bot-left{
+        width:75%;
+    }
+
+    /* 新手指南 */
+
+    .xin_shou_zhi_nan{
+        margin-top: 10px;
+        background: #fff;
+        /* padding:  */
+    }
+    .xin_shou_zhi_nan>h3{
+        font-size: 15px;
+        color: #0047aa;
+        font-weight: 900;
+        padding:  10px;
+        border-bottom: 1px solid #0047aa;
+    }
+    .xin_shou_zhi_nan>ul{
+
+         padding: 22.5px 10px;
+    }
+    .xin_shou_zhi_nan>ul>li{
+        padding: 1px 0;
+        cursor: pointer;
+        margin-bottom: 8px;
+        line-height: 35px;
+        border-bottom:1px dashed #ddd;
+    }
+
+    .cont-right-bot-left{
+        float: left;
+    }
+    /* 彩票走势图 */
+    .cont-right-bot-right{
+        float: right;
+        width: 230px;
+        margin-top:10px;
+        /* transform: translateX(-30px); */
+    }   
+
+    .cont-right-bot-right>h3{
+        padding: 5px 10px;
+        height: 30px;
+        line-height: 30px;
+        background: #fff;
+        color: #0047aa;
+        font-size: 15px;
+        font-weight: 900;
+        border-bottom: 1px solid #0047aa;
+    }
+
+    .cont-right-bot-right-cpzs{
+        width: 100%;
+        background: #fff;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    .cont-right-bot-right-cpzs>img{
+        width: 100%;
+        cursor: pointer;
+    }
+
+
+
+
+    /* 中奖排行 */
+
+    .cont-right-bot-right-zjphb{
+        margin-top: 10px;
+        width: 100%;
+        background: #fff;
+        height: 456px;
+        overflow: hidden;
+    }
+
+    .cont-right-bot-right-zjphb>h4{
+
+        padding: 10px 10px;
+        background: #fff;
+        color: #0047aa;
+        font-size: 15px;
+        font-weight: 900;
+        border-bottom: 1px solid #0047aa;
+    }
+
+    .cont-right-bot-right-zjphb>ul{
+        width: 100%;
+        display: flex;
+        padding: 10px;
+        box-sizing: border-box;
+        border-bottom: 1px solid #ccc;
+    }
+    .cont-right-bot-right-zjphb>ul>li{
+        flex:1.5;
+        font-size: 13px;
+        color: #000;
+        text-align: left
+    }
+    .cont-right-bot-right-zjphb>ul>li:nth-child(2){
+        flex: 2;
+        text-align: center;
+    }
+    .cont-right-bot-right-zjphb>ul>li:nth-child(3){
+        text-align: right;
+        flex:2;
+        text-align: right;
+    }
+
+    .cont-right-bot-right-zjphb>div{
+        width: 100%;
+        height: 456px;
+        overflow:hidden;
+    }
+    .cont-right-bot-right-zjphb table{
+        width: 100%;
+    }
+    .cont-right-bot-right-zjphb table>tbody{
+        width: 100%;
+        animation: zhongjiang 100s infinite linear;
+        
+    }
+
+    .cont-right-bot-right-zjphb table>tbody:hover{
+        animation-play-state:paused;
+        -webkit-animation-play-state:paused; 
+    }
+
+   
+
+    @keyframes zhongjiang {
+        0%{
+            transform: translateY(0%);
+        }
+
+        100%{
+            transform: translateY(-60%);
+        }
+    }
+    .cont-right-bot-right-zjphb table tr{
+        display: flex;
+        justify-content: space-between;
+        height: 35px;
+        line-height: 35px;
+    }
+
+     .cont-right-bot-right-zjphb table tr:nth-child(odd){
+         background: #f2f2f2;
+     }
+
+    .cont-right-bot-right-zjphb table tr td{
+        font-size: 12px;
+        color: #000;
+        
+    }
+    .cont-right-bot-right-zjphb table tr td:nth-child(1), .cont-right-bot-right-zjphb table tr th:nth-child(1){
+        flex:1.5;
+        text-align: left;
+    }
+    .cont-right-bot-right-zjphb table tr td:nth-child(2), .cont-right-bot-right-zjphb table tr th:nth-child(2){
+        flex:2;
+        text-align: center;
+    }
+    .cont-right-bot-right-zjphb table tr td:nth-child(3), .cont-right-bot-right-zjphb table tr th:nth-child(3){
+        flex:2;
+        text-align: right;
+    }
+</style>

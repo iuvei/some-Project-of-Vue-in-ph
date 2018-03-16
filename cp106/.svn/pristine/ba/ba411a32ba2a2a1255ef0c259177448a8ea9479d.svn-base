@@ -1,0 +1,1536 @@
+<template>
+    <div class="loginReg" v-loading="login_out_loading">
+
+        <div class="loginReg-cont">
+            <div class="fl" @click="go_home">
+                <img src="../../image/logo2.488ee720.png" alt="logo">
+            </div>
+
+            <div class="fr loginReg_right" v-if="!is_login">
+                 <!-- 免费试玩 -->
+                <el-button type="text" @click="try_btn" class="input_btn try-btn">免费试玩</el-button>
+                <el-dialog
+                    title="用户试玩"
+                    :visible.sync="tryBool"
+                    width="25%"
+                    center
+                    v-loading="try_loading"
+                    element-loading-background="rgba(0, 0, 0, 0.4)"
+                    >
+
+                    <div class="form_data">
+                        <div class="try_acount">
+                            <input type="text" @input="acount_yan"  placeholder="用户名(字母或数字[6-12位])" maxlength="12" v-model="acount_value">
+                        </div>
+                        <div class="try_password">
+                            <input :type="try_password"  placeholder="密码(字母或数字[6-15位])"  maxlength="15" v-model="password_value">
+                            <i  @click="show_password" :class="{ 'blue' : this.try_password == 'password'}"></i>
+                        </div>
+                        <div class="try_password">
+                            <input :type="try_password" @input="acount_yan" placeholder="确认密码"  maxlength="15" v-model="sure_password_value">
+                        </div>
+                    </div>
+                    <div class="tip_message" :class="{'manman':isShow_tip_message == true}" v-show="isShow_tip_message">
+                        {{tip_message}}
+                    </div>
+                    <div class="try_now" @click="free_try"    >立即试玩</div>
+                    <div class="return_reg" @click="reg_btn">返回普通注册</div>
+                    <span slot="footer" class="dialog-footer">
+                        <i @click="fast_login" style="padding-left:50px;">快速登录</i>
+                        <p style="color:#868e96; padding-left:70px;padding-top:20px;">2010-2017 © 至尊彩票 版权所有。</p>
+                    </span>
+                </el-dialog>
+                <!-- 注册 -->
+                <el-button type="text" @click="reg_btn" class="input_btn reg_btn" >注册</el-button>
+                <el-dialog
+                    title="用户注册"
+                    :visible.sync="regBool"
+                    width="25%"
+                    center
+                    v-loading="reg_loading"
+                    element-loading-background="rgba(0, 0, 0, 0.4)"
+                    style="margin-top:-7.9vh;"
+                    >
+                    <div class="form_data">
+                        <div class="try_acount reg_acount">
+                            <input type="text" @input="reg_acount_yan"  placeholder="用户名(字母或数字[6-12位])" maxlength="12" v-model="reg_acount_value">
+                        </div>
+                        <div class="try_password reg_password">
+                            <input :type="try_password" @input="reg_acount_yan" placeholder="密码(字母或数字[6-15位])"  maxlength="15" v-model="reg_password_value">
+                                <i  @click="show_password" :class="{ 'blue' : this.try_password == 'password'}" ></i>
+                        </div>
+                        <div class="try_password reg_password">
+                            <input :type="try_password" @input="sure_password"  placeholder="确认密码"  maxlength="15" v-model="sure_reg_password_value">
+                            <!-- <i  @click="show_password"></i> -->
+                        </div>
+
+                        <div class="reg_yanzhengma">
+                            <input type="text"  placeholder="请输入验证码"  maxlength="4"  style="width:60%;" v-model="reg_yanzhengma_value">
+                            <img  @click="fresh_reg_yanzhengma" :src="reg_yanzheng_img" style="verticalAlign:middle;padding-left:5px;">
+                            <em @click="fresh_reg_yanzhengma"></em>
+                            <!-- <input type="text"  placeholder="邀请码(选填)"  maxlength="15" v-model="yaoqing_ma_value"> -->
+                            <!-- <i  @click="show_password"></i> -->
+                        </div>
+
+                        <div class="try_password yaoqing_ma">
+                            <input type="text"  placeholder="邀请码(选填)"  maxlength="15" v-model="yaoqing_ma_value">
+                            <!-- <i  @click="show_password"></i> -->
+                        </div>
+                        <p>
+                            <el-checkbox v-model="checked" ></el-checkbox> 我已看过并同意 《 <a style="text-decoration:underline;color:blue;cursor:pointer;" @click="go_reg_con" > 用户购彩服务协议 </a>   》
+                        </p>
+
+
+                    </div>
+                    <div class="tip_message" :class="{'manman':isShow_tip_message == true}" v-show="isShow_tip_message">
+                        {{tip_message}}
+                    </div>
+
+                    <div class="try_now reg_now" style="margin-top:20px;" @click="now_reg">立即注册</div>
+                    <div class="return_reg return_try" @click="try_btn">免费试玩</div>
+                    <span slot="footer" class="dialog-footer">
+                        <i @click="fast_login" style="padding-left:50px;">快速登录</i>
+                        <p style="color:#868e96; padding-left:70px;padding-top:20px;">2010-2017 © 至尊彩票 版权所有。</p>
+                    </span>
+
+                </el-dialog>
+                <!-- 登录 -->
+                <el-button type="text" @click="loginBool = true" class="input_btn login_btn">登录</el-button>
+                <el-dialog
+                title="用户登录"
+                :visible.sync="loginBool"
+                width="25%"
+                center
+                v-loading="login_loading"
+                element-loading-background="rgba(0, 0, 0, 0.4)"
+                >
+                <div class="form_data">
+                    <!-- 登录账号 -->
+                    <p v-if="login_aocunt_text==true" style="margin-bottom:3px;font-size:12px;color:red" class="clearfix login_acount_text_wrong"> <i class="login_acount fl">用户名(必填)</i>  <span class="fr"> {{ login_text_tip_account }} </span></p>
+                    <p v-else style="margin-bottom:3px;font-size:12px;color:green" class="clearfix login_acount_text_true"> <i class="login_acount fl">用户名(必填)</i>  <span class="fr">用户名格式正确</span></p>
+                    <div class="try_acount reg_acount">
+                        <input type="text" @input="login_acount_yan"  placeholder="请输入字母和数字组成的6-12个字符" maxlength="12" v-model="login_acount_value">
+                    </div>
+
+                    <!-- 登录密码 -->
+                    <p v-if="login_password_text == true" style="margin-bottom:3px;font-size:12px;color:red" class="clearfix login_acount_text_wrong"> <i class="login_acount fl">密码(必填)</i>  <span class="fr"> {{ login_text_tip_password }} </span></p>
+                    <p v-else style="margin-bottom:3px;font-size:12px;color:green" class="clearfix login_acount_text_true"> <i class="login_acount fl">密码(必填)</i>  <span class="fr">密码格式正确</span></p>
+                    <div class="try_password reg_password">
+                        <input :type="try_password" @input="login_password_yan" placeholder="请输入字母和数字组成的6-15个字符"  maxlength="15" v-model="login_password_value">
+                        <i  @click="show_password" :class="{ 'blue' : this.try_password == 'password'}" ></i>
+                    </div>
+                     <!-- 登录验证码 -->
+                    <div v-if="this.login_yanzheng_status">
+                        <p v-if="login_code_text == true" style="margin-bottom:3px;font-size:12px;color:#aaa" class="clearfix login_acount_text_wrong"> <i class="login_acount fl">验证码(必填)</i> </p>
+                        <p v-else style="margin-bottom:3px;font-size:12px;color:#aaa" class="clearfix login_acount_text_true"> <i class="login_acount fl">验证码(必填)</i>  </p>
+
+                        <div class="try_password yanzheng_ma" >
+                            <input  style="width:55%;margin-right:1%;" placeholder="请输入验证码"  v-model="code_value"  maxlength="4">
+                            <img :src="reg_yanzheng_img" style="verticalAlign:middle;"> <em @click="fresh_reg_yanzhengma"> </em>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- <div class="tip_message" :class="{'manman':isShow_tip_message == true}" v-show="isShow_tip_message">
+                    {{tip_message}}
+                </div> -->
+
+                <div class="login_now" style="margin-top:20px;" @click="now_login">立即登录</div>
+                <div class="reg_now" @click="reg_btn">立即注册</div>
+                <div class="try_btn login_try_btn" @click="try_btn">免费试玩</div>
+
+                <!-- <span slot="footer" class="dialog-footer">
+                </span> -->
+                </el-dialog>
+
+            </div>
+
+            <div class="fr login_account_info" v-if="is_login">
+                <ul>
+                    <li :class="{'fresh' : is_fresh_class}" @click="refresh_money">
+                        <span  >余额</span>
+                        <i> {{user_balance}} 元 </i>
+                    </li>
+                    <li @click="open_info('4')"  :class="{'try_play': this.user.userinfo.is_trial == 1}">充值</li>
+                    <li @click="open_info('5')"  :class="{'try_play': this.user.userinfo.is_trial == 1 }">提款</li>
+                    <li @click="open_info('6')" >投注记录</li>
+                    <li @click="open_info('7-1')" >账户明细</li>
+                    <li @click="open_info('0')" >用户中心</li>
+                    <li @click="login_out" >安全登出</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</template>
+
+<script>
+// import Vue from 'vue'
+// import {  } from 'element-ui'
+// Vue.component(Dialog.name, Dialog)
+
+import { requestOpt, el_tip } from "../../api/recommend";
+import { messageBox, Dialog, Loading } from "element-ui";
+
+// import {api_ver} from '../../api/config'
+import { mapState, mapActions } from "vuex";
+import {
+  USER_SIGNIN,
+  OF_CARD_NAME,
+  OF_CARD_NUMMBER,
+  OF_AVATE
+} from "../../store/user";
+
+export default {
+  name: "topLoginReg",
+  components: {},
+  // computed:{
+  //     ...mapState(['user'])
+  // },
+  data() {
+    return {
+      tryBool: false,
+      regBool: false,
+      loginBool: false,
+
+      password_value: "",
+      acount_value: "",
+      sure_password_value: "",
+
+      try_password: "password",
+      tip_message: "",
+      isShow_tip_message: false,
+      reg_acount_value: "",
+      reg_password_value: "",
+      sure_reg_password_value: "",
+      yaoqing_ma_value: "",
+      checked: true,
+      login_password_value: "",
+      login_acount_value: "",
+      code: "",
+      code_value: "",
+      is_login: false,
+      is_try_login: false,
+      //   ----------------
+      login_aocunt_text: true,
+      login_password_text: true,
+      login_code_text: true,
+      login_text_tip_account: "请输入字母和数字组成的6-12个字符",
+      login_text_tip_password: "请输入字母和数字组成的6-12个字符",
+      login_text_tip_code: "请输入验证码",
+      user: [],
+      try_loading: false,
+      reg_loading: false,
+      login_loading: false,
+      login_out_loading: false,
+      reg_yanzheng_img: "",
+      reg_yanzheng_key: "",
+      reg_yanzhengma_value: "",
+      login_yanzheng_status: 0,
+      //   login_yanzheng_value:''
+      is_fresh_class: false,
+      user_balance: this.user ? this.user.userinfo.balance : ""
+    };
+  },
+  methods: {
+    ...mapActions([USER_SIGNIN, OF_CARD_NAME, OF_CARD_NUMMBER, OF_AVATE]),
+    go_home() {
+      this.$router.push("/");
+    },
+    //   显示和不显现密码
+    show_password() {
+      this.try_password = this.try_password == "password" ? "" : "password";
+    },
+    //   正则匹配用户输入是否合法
+    checkAll(s) {
+      var pattern = new RegExp(
+        "[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？\u4e00-\u9fa5]"
+      );
+      if (pattern.exec(s)) {
+        return false;
+      }
+      return true;
+    },
+    acount_yan() {
+      if (this.acount_value.length < 6) {
+        this.tip_message = "请输入字母和数字组成的6-12个字符的用户名";
+        this.isShow_tip_message = true;
+      } else if (this.password_value.length < 6) {
+        this.tip_message = "请输入字母和数字组成的6-15个字符的密码";
+        this.isShow_tip_message = true;
+      } else {
+        this.isShow_tip_message = false;
+      }
+
+      if (this.sure_password_value != this.password_value) {
+        this.tip_message = "两次输入密码不一致";
+        this.isShow_tip_message = true;
+      }
+
+      if (!this.checkAll(this.acount_value) && this.acount_value != "") {
+        this.tip_message = "请不要输入包含有！# * ，等特殊字符";
+        this.isShow_tip_message = true;
+      }
+
+      if (!this.checkAll(this.password_value) && this.password_value != "") {
+        this.tip_message = "请不要输入包含有！# * ，等特殊字符";
+        this.isShow_tip_message = true;
+      }
+    },
+
+    reg_acount_yan() {
+      if (this.reg_acount_value.length < 6) {
+        this.tip_message = "请输入字母和数字组成的6-12个字符的用户名";
+        this.isShow_tip_message = true;
+      } else if (
+        this.sure_reg_password_value.length < 6 ||
+        this.reg_password_value.length < 6
+      ) {
+        this.tip_message = "请输入字母和数字组成的6-15个字符的密码";
+        this.isShow_tip_message = true;
+      } else {
+        this.isShow_tip_message = false;
+      }
+
+      if (
+        !this.checkAll(this.reg_acount_value) &&
+        this.reg_acount_value != ""
+      ) {
+        this.tip_message = "请不要输入包含有！# * ，等特殊字符";
+        this.isShow_tip_message = true;
+      }
+
+      if (
+        !this.checkAll(this.reg_password_value) &&
+        this.reg_password_value != ""
+      ) {
+        this.tip_message = "请不要输入包含有！# * ，等特殊字符";
+        this.isShow_tip_message = true;
+      }
+    },
+
+    login_acount_yan() {
+      this.login_aocunt_text =
+        this.login_acount_value.length < 6 || this.login_acount_value == ""
+          ? true
+          : false;
+      if (this.checkAll(this.login_acount_value)) {
+        this.login_text_tip_account = "请输入字母和数字组成的6-12个字符";
+        // this.login_aocunt_text = true;
+      } else {
+        this.login_text_tip_account = "请不要输入包含有！# * ，等特殊字符";
+        // this.login_aocunt_text = false;
+      }
+    },
+    login_password_yan() {
+      this.login_password_text =
+        this.login_password_value.length < 6 || this.login_password_value == ""
+          ? true
+          : false;
+      if (this.checkAll(this.login_password_value)) {
+        this.login_text_tip_password = "请输入字母和数字组成的6-12个字符";
+        // this.login_password_text = true;
+      } else {
+        this.login_text_tip_password = "请不要输入包含有！# * ，等特殊字符";
+        // this.login_password_text = false;
+      }
+    },
+    // 试玩弹出窗关闭后
+    try_btn() {
+      requestOpt.reqnoGet(
+        "trial_username",
+        res => {
+          if(res.data.status == 1 || res.status == 200){
+           this.acount_value = res.data.data.username;
+          }else if(res.data.status == 0 && res.data.code == -2){
+            el_tip(res.data.msg + ' 请重新登录');
+            sessionStorage.removeItem('user')
+            setTimeout(()=>{
+                window.location.reload();
+                this.loginBool = true;
+            },590000)
+
+          }else{
+              el_tip(res.data.msg );
+          }
+        },
+        err => {
+          el_tip("网络连接失败")
+          /*this.$message({
+            type: "info",
+            message: "网络连接失败"
+          });*/
+        }
+      );
+      this.tryBool = true;
+      this.regBool = false;
+      this.loginBool = false;
+      //   this.password_value = '';
+      //   this.acount_value = '';
+      this.isShow_tip_message = false;
+    },
+    // 快速登录
+    fast_login() {
+      this.tryBool = false;
+      this.regBool = false;
+      this.loginBool = true;
+    },
+    // 确认密码
+    sure_password() {
+      if (this.sure_reg_password_value != this.reg_password_value) {
+        this.tip_message = "两次密码输入不一致";
+        this.isShow_tip_message = true;
+      } else {
+        this.isShow_tip_message = false;
+      }
+    },
+
+    //   刷新注册验证码
+    fresh_reg_yanzhengma() {
+      requestOpt.reqnoGet(
+        "verify_code",
+        res => {
+
+          if(res.data.status == 1 || res.status == 200){
+            console.log(res);
+            this.reg_yanzheng_img = res.data.data.verify_code;
+            this.reg_yanzheng_key = res.data.data.verify_key;
+          }else if(res.data.status == 0 && res.data.code == -2){
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+          }else {
+               el_tip(res.data.msg);
+          }
+
+        },
+        err => {
+         if(err){
+              el_tip(err.data.msg)
+         }else{
+             el_tip("网络连接失败")
+         }
+        }
+      );
+    },
+    // 注册弹出窗关闭后
+    reg_btn() {
+      requestOpt.reqnoGet(
+        "verify_code",
+        res => {
+         if(res.data.status == 1 || res.status == 200){
+            this.reg_yanzheng_img = res.data.data.verify_code;
+            this.reg_yanzheng_key = res.data.data.verify_key;
+            //  el_tip(res.data.msg);
+         }else if(res.data.status == 0 && res.data.code == -2){
+                 el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+         }else{
+              el_tip(res.data.msg);
+         }
+
+        },
+        err => {
+          if(err){
+              el_tip(err.data.msg);
+          }else{
+             el_tip("网络连接失败")
+          }
+
+        }
+      );
+      this.regBool = true;
+      this.tryBool = false;
+      this.loginBool = false;
+      this.reg_password_value = "";
+      this.sure_reg_password_value = "";
+      this.reg_acount_value = "";
+      this.isShow_tip_message = false;
+    },
+
+    // 验证码部分
+        // createCode(){
+        //         this.code= "";
+        //         var codeLength = 6;//验证码的长度
+        //         var random = new Array(0,1,2,3,4,5,6,7,8,9,'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R',
+        //         'S','T','U','V','W','X','Y','Z');//随机数
+        //         for(var i = 0; i < codeLength; i++) {//循环操作
+        //         var index = Math.floor(Math.random()*36);//取得随机数的索引（0~35）
+        //         this.code += random[index];//根据索引取得随机数加到code上
+        //     }
+        //     //把code值赋给验证码
+        // },
+
+        // validate(){
+        //     this.code_value = this.code_value.toUpperCase();
+        //     if(this.code_value.length <= 0) { //若输入的验证码长度为0
+        //         this.login_code_text = true;
+        //     }else if(this.code_value != this.code ) { //若输入的验证码与产生的验证码不一致时
+        //         this.login_code_text = true;
+        //         //this.createCode();//刷新验证码
+        //     }else {
+        //         //输入正确时
+        //         this.login_code_text = false;
+        //     }
+    // },
+    receivedData() {
+      this.$root.bus.$on("sendData", flag => {
+        this.tryBool = flag;
+        this.try_btn();
+      });
+      this.$root.bus.$on("loginFlag", flag => {
+        this.loginBool = flag;
+      });
+    },
+    // 免费试玩
+    free_try() {
+      document
+        .querySelectorAll(".el-dialog__header")[0]
+        .classList.add("active");
+
+      // document.querySelector('.login_now').style.cursor = 'not-allowed';
+      if (!this.password_value) {
+        el_tip("请输入密码")
+
+        return;
+      }
+      if (this.password_value.length < 6) {
+        el_tip("密码长度不低于六位数")
+
+        return;
+      }
+
+      if (this.password_value != this.sure_password_value) {
+        el_tip("两次密码输入不一致")
+
+        return;
+      }
+      this.try_loading = true;
+      requestOpt.reqPostNouser(
+        "trial_user",
+        {
+          username: this.acount_value,
+          password: this.password_value,
+          password_confirm: this.sure_password_value
+        },
+        res => {
+
+          if (res.data.status == 1) {
+            el_tip(res.data.msg)
+            requestOpt.reqPostNouser(
+              "session",
+              {
+                username: this.acount_value,
+                password: this.password_value,
+                ver: 1.0,
+                imei: "",
+                imsi: "",
+                idfa: "",
+                uuid: "",
+                sim: "",
+                udid: "",
+                mac: "",
+                sys_ver: "",
+                android_id: "",
+                model: "",
+                screen_size: "",
+                screen_resolution: "",
+                root: "",
+                channel_code: "",
+                push_id: ""
+              },
+              res => {
+                // console.log(res);
+                if (res.data.status === 1 || res.status == 200) {
+                  this.is_login = true;
+                  this.is_try_login = true;
+                  this.tryBool = false;
+                  el_tip(res.data.msg)
+                  /*this.$message({
+                    type: "success",
+                    message: res.data.msg
+                  });*/
+                  this.user = res.data.data;
+                  sessionStorage.setItem("is_try_login", true);
+                  sessionStorage.setItem("user", JSON.stringify(res.data.data));
+                  this.$root.bus.$emit("isLogin", true);
+                  this.open_qiandao();
+                  this.refresh_money();
+                  document
+                    .querySelectorAll(".el-dialog__header")[2]
+                    .classList.remove("active");
+
+                  this.try_loading = false;
+
+                  if (this.is_try_login) {
+                    this.send_user_is_login();
+                    setInterval(() => {
+                      requestOpt.reqPutNouser(
+                        "token",
+                        this.user.token,
+                        res => {
+                          if (res.status == 200) {
+                            this.user.token = res.data.token;
+                            sessionStorage.setItem(
+                              "user",
+                              JSON.stringify(this.user)
+                            );
+                            this.try_loading = false;
+                          } else if(res.data.status == 1 || res.status == 200){
+                            el_tip(res.data.msg + '请重新登录');
+                            window.location.reload();
+                            this.loginBool = true;
+                          }
+                          else {
+                            el_tip(res.data.msg)
+                          }
+                            this.try_loading = false;
+                        },
+
+                        err => {
+                          el_tip(err)
+                          this.try_loading = false;
+                        }
+                      );
+                    }, 590000);
+                  }
+                }else if(res.data.status == 0 && res.data.code == -2){
+                    el_tip(res.data.msg + ' 请重新登录');
+                    sessionStorage.removeItem('user')
+                    setTimeout(()=>{
+                        window.location.reload();
+                        this.loginBool = true;
+                    },1000)
+                }else {
+                    el_tip(res.data.msg);
+                }
+              },
+              err => {
+                // document.querySelectorAll('.el-dialog__header')[2].classList.remove('active')
+                if (err.data) {
+                  el_tip(res.data.msg)
+
+                  this.try_loading = false;
+                }
+              }
+            );
+          }else if(res.data.status == 0 && res.data.code == -2){
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+          }else {
+               el_tip(res.data.msg);
+          }
+          document
+            .querySelectorAll(".el-dialog__header")[0]
+            .classList.remove("active");
+            this.try_loading = false;
+        },
+        err => {
+          if (err.data) {
+            el_tip(res.data.msg)
+            /*this.$message({
+              type: "info",
+              message: err.data.msg
+            });*/
+            document
+              .querySelectorAll(".el-dialog__header")[0]
+              .classList.remove("active");
+          } else {
+            el_tip('网络连接失败')
+          }
+
+          this.try_loading = false;
+        }
+      );
+    },
+
+    // 立即注册
+    now_reg() {
+
+    //   if(this.reg_acount_value.){}
+      let first_str = this.reg_acount_value.substr(0,1);
+      if( Number(first_str) || first_str == 0){
+          el_tip('用户名不能以数字开头且不能有非法字符')
+          return;
+      }
+      if (this.reg_acount_value == "") {
+        this.tip_message = "账号不能为空";
+        this.isShow_tip_message = true;
+        return;
+      }else if(this.reg_acount_value.length < 6){
+        el_tip('用户名不能少于6位数')
+        return;
+      }
+      else if (this.reg_password_value == "") {
+        this.tip_message = "密码不能为空";
+        this.isShow_tip_message = true;
+        return;
+      } else if (this.sure_reg_password_value == "") {
+        this.tip_message = "请确认密码";
+        this.isShow_tip_message = true;
+        return;
+      }
+      if (this.isShow_tip_message) {
+        return;
+      }
+
+      this.reg_loading = true;
+      document
+        .querySelectorAll(".el-dialog__header")[1]
+        .classList.add("active");
+      requestOpt.reqPostNouser(
+        "user",
+        {
+          username: this.reg_acount_value,
+          password: this.reg_password_value,
+          password_confirm: this.sure_reg_password_value,
+          inv_code: this.yaoqing_ma_value,
+          verify_code: this.reg_yanzhengma_value,
+          verify_key: this.reg_yanzheng_key
+        },
+        res => {
+          // console.log(res);
+          document
+            .querySelectorAll(".el-dialog__header")[1]
+            .classList.remove("active");
+          if (res.data.status == 1) {
+            this.reg_loading = false;
+            el_tip(res.data.msg)
+            this.regBool = false;
+            this.loginBool = true;
+            this.login_acount_value = this.reg_acount_value;
+            this.login_acount_yan();
+            // this.login_acount_value  = this.reg_acount_value;
+            // this.login_password_value = this.reg_password_value
+          } else if(res.data.status == 0 && res.data.code == -2){
+                this.reg_loading = false;
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+          } else{
+               this.reg_loading = false;
+               el_tip(res.data.msg);
+          }
+
+          this.reg_loading = false;
+        },
+        err => {
+          document
+            .querySelectorAll(".el-dialog__header")[1]
+            .classList.remove("active");
+          if (err.data) {
+            el_tip(res.data.msg)
+
+          } else {
+            el_tip('网络连接失败')
+
+          }
+
+          this.reg_loading = false;
+        }
+      );
+    },
+
+    // 注册协议
+    go_reg_con() {
+      // console.log($('body'));
+      let str = window.location.href;
+      let index = str.indexOf("#");
+      let subStr = str.substr(0, index + 1);
+      window.open(subStr + "/" + "regContract");
+    },
+    // 立即登录
+    now_login() {
+      this.login_acount_yan();
+      let login_now = document.querySelector(".login_now");
+      if (this.login_aocunt_text || this.login_password_text) {
+        return;
+      }
+      document
+        .querySelectorAll(".el-dialog__header")[2]
+        .classList.add("active");
+      this.login_loading = true;
+      requestOpt.reqPostNouser(
+        "session",
+        {
+          username: this.login_acount_value,
+          password: this.login_password_value,
+          ver: 1.0,
+          imei: "",
+          imsi: "",
+          idfa: "",
+          uuid: "",
+          sim: "",
+          udid: "",
+          mac: "",
+          sys_ver: "",
+          android_id: "",
+          model: "",
+          screen_size: "",
+          screen_resolution: "",
+          root: "",
+          channel_code: "",
+          push_id: "",
+          verify_key: this.reg_yanzheng_key,
+          verify_code: this.code_value
+        },
+        res => {
+          if (res.data.code) {
+            this.fresh_reg_yanzhengma();
+            this.login_yanzheng_status = res.data.code;
+          }
+          if (res.data.status === 1) {
+
+            this.is_fresh_class = false;
+            this.login_yanzheng_status = 0;
+            this.loginBool = false;
+            this.is_login = true;
+
+            sessionStorage.setItem("user", JSON.stringify(res.data.data));
+            this.$root.bus.$emit("isLogin", true);
+            this.user = res.data.data;
+            window.saveRotate = this.user.userinfo.return_ratio_rate
+            el_tip(res.data.msg)
+            this.is_try_login = this.user.userinfo.is_trial == 1 ? true : false;
+            this.refresh_money();
+            // console.log(this.user);
+            this.open_qiandao();
+            document
+              .querySelectorAll(".el-dialog__header")[2]
+              .classList.remove("active");
+            el_tip(res.data.msg)
+
+            this.login_loading = false;
+
+            if (this.is_login) {
+              this.send_user_is_login();
+              setInterval(() => {
+                requestOpt.reqPutNouser(
+                  "token",
+                  this.user.token,
+                  res => {
+
+                    if (res.data.status == 1 || res.status == 200) {
+                      this.user.token = res.data.token;
+                      sessionStorage.setItem("user", JSON.stringify(this.user));
+                      this.login_loading = false;
+                    }else if(res.data.status == 0 && res.data.code == -2){
+                        el_tip(res.data.msg + ' 请重新登录');
+                        sessionStorage.removeItem('user')
+                        setTimeout(()=>{
+                            window.location.reload();
+                            this.loginBool = true;
+                        },1000)
+
+                    }
+                    else {
+                      el_tip(res.data.msg)
+
+                      window.location.reload();
+                      this.login_loading = false;
+                    }
+                  },
+
+                  err => {
+                    el_tip(err)
+                    this.login_loading = false;
+                  }
+                );
+              },590000);
+            }
+          }else if(res.data.status == 0 && res.data.code == -2){
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+          } else {
+            el_tip(res.data.msg)
+
+            document
+              .querySelectorAll(".el-dialog__header")[2]
+              .classList.remove("active");
+          }
+
+          this.login_loading = false;
+        },
+        err => {
+          document
+            .querySelectorAll(".el-dialog__header")[2]
+            .classList.remove("active");
+          if (err.data) {
+            el_tip(res.data.msg)
+
+            this.login_loading = false;
+          } else {
+            el_tip('网络连接失败')
+
+          }
+
+          this.login_loading = false;
+        }
+      );
+    },
+
+    // 刷新余额
+
+    refresh_money() {
+      if (!this.user) {
+        return;
+      }
+      this.is_fresh_class = true;
+      this.user_balance = JSON.parse(sessionStorage.getItem("my_balance"))
+        ? JSON.parse(sessionStorage.getItem("my_balance"))
+        : this.user.userinfo.balance;
+      this.user.token = JSON.parse(sessionStorage.getItem("user")).token;
+      requestOpt.reqGet(
+        "userinfo?push_id=",
+        this.user.token,
+        res => {
+          if (res.data.status == 1) {
+            this.user.userinfo = res.data.data;
+            sessionStorage.setItem(
+              "my_balance",
+              JSON.stringify(res.data.data.balance)
+            );
+
+            sessionStorage.setItem('__userinfo',JSON.stringify(res.data.data));
+            this.user_balance = res.data.data.balance;
+            this.is_fresh_class = false;
+            console.log(res);
+          }else if(res.data.status == 0 && res.data.code == -2){
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.loginBool = true;
+                },1000)
+          } else {
+            el_tip(res.data.msg)
+          }
+        },
+        err => {
+          if (err) {
+            el_tip(err)
+            /*this.$message({
+              type: "error",
+              message: err
+            });*/
+          }
+        }
+      );
+    },
+
+    // 用户退出登录
+    login_out() {
+      this.$confirm("确定退出登录?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var is_try_login = JSON.parse(sessionStorage.getItem("is_try_login"));
+          this.login_out_loading = true;
+          // console.log(is_try_login);
+          // 如果不是试玩账号
+          if (!is_try_login) {
+            this.user = JSON.parse(sessionStorage.getItem("user"));
+            requestOpt.reqGet(
+              "logout",
+              this.user.token,
+              res => {
+                if(res.data.status == 1 ||  res.status == 200){
+                    el_tip(res.data.msg)
+                    this.is_login = false;
+                    this.login_out_loading = false;
+                    sessionStorage.removeItem("user");
+                    //                    sessionStorage.clear();
+                    //  setTimeout(()=>{
+                    //     window.location.reload();
+                    // },1000)·
+                    this.$root.bus.$emit("isReload", true);
+                }else if(res.data.status == 0 && res.data.code == -2){
+                    el_tip(res.data.msg + ' 请重新登录');
+                    sessionStorage.removeItem('user')
+                    setTimeout(()=>{
+                        window.location.reload();
+                        this.loginBool = true;
+                    },1000)
+                }else{
+                     el_tip(res.data.msg)
+                }
+
+              },
+
+              err => {
+                /*if (err.data.mag) {
+                  this.$message({
+                    type: "success",
+                    message: err.data.msg
+                  });
+                }*/
+                el_tip(err)
+                this.login_out_loading = false;
+              }
+            );
+          }
+          // 如果是试玩账号
+          if (is_try_login == true) {
+            this.user = JSON.parse(sessionStorage.getItem("user"));
+            requestOpt.reqGet(
+              "logout",
+              this.user.token,
+              res => {
+                // console.log(res);
+                /*this.$message({
+                  type: "success",
+                  message: res.data.msg
+                });*/
+                el_tip(res.data.msg)
+                this.is_try_login = false;
+                this.is_login = false;
+                sessionStorage.removeItem("is_try_login");
+                sessionStorage.removeItem("user");
+                //                    sessionStorage.clear();
+                this.$root.bus.$emit("isReload", true);
+                this.login_out_loading = false;
+              },
+
+              err => {
+                if (err.data.mag) {
+                  this.$message({
+                    type: "info",
+                    message: err.data.msg
+                  });
+                }
+                this.login_out_loading = false;
+              }
+            );
+          }
+        })
+        .catch(err => {
+          console.log("cancel");
+        });
+    },
+    // 验证用户是否是登录状态
+    is_have_user() {
+      // 登录状态
+      var user = JSON.parse(sessionStorage.getItem("user"));
+      this.user = user;
+      // console.log(this.user);
+      this.is_login = user ? true : false;
+      // 试玩登录状态
+      var is_try_login = JSON.parse(sessionStorage.getItem("is_try_login"));
+      this.is_try_login = is_try_login ? true : false;
+    },
+    // 打开信息中心
+    open_info(str) {
+      // console.log(str);
+      if (
+        (str == "4" && this.user.userinfo.is_trial == 1) ||
+        (str == "5" && this.user.userinfo.is_trial == 1)
+      ) {
+        return;
+      }
+      this.$root.bus.$emit("send_info_status", str);
+    },
+    // 登录成功后打开签到面板
+    open_qiandao() {
+      setTimeout(() => {
+        var flag = true;
+        flag = this.user.userinfo.is_sign ? true : false;
+        this.$root.bus.$emit("send_qiandao_status", !flag);
+      }, 50);
+    },
+
+    // 接收投注后传过来刷新余额的请求
+    receive_yu_e() {
+      this.$root.bus.$on("send_yu_e_late", flag => {
+        if (flag) {
+          this.refresh_money();
+        }
+      });
+    },
+    receive_is_login(){
+        this.$root.bus.$on('send_is_login',(flag)=>{
+            // if(flag)
+            this.is_login = flag;
+        })
+    },
+    // 登录成功后发送登录状态
+    send_user_is_login(){
+        this.$root.bus.$emit('send_user_is_login_status', true);
+    }
+  },
+  destroyed() {},
+  mounted() {
+    //   this.createCode();
+    this.receivedData();
+    this.is_have_user();
+    this.receive_yu_e();
+    if (this.user) {
+      this.refresh_money();
+    }
+    this.receive_is_login();
+  }
+};
+</script>
+
+<style>
+/* loading线 */
+
+.loginReg .el-message.el-message--info {
+  z-index: 9999;
+}
+
+.loginReg .el-dialog.el-dialog--center div.el-dialog__header {
+  position: relative;
+  overflow: hidden;
+}
+.loginReg .el-dialog.el-dialog--center div.el-dialog__header.active::before {
+  content: "";
+  display: inline-block;
+  height: 3px;
+  width: 30%;
+  background: red;
+  position: absolute;
+  bottom: -1.5px;
+  left: 0;
+  animation: line_move 1s infinite linear;
+}
+
+@keyframes line_move {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(230%);
+  }
+}
+
+/* 背景 */
+.loginReg {
+  background: #fff;
+}
+/* 左边logo */
+.loginReg {
+  width: 100%;
+  height: auto;
+}
+
+.loginReg-cont {
+  /*width: 1200px;*/
+  height: 100px;
+  margin: 0 auto;
+}
+.loginReg-cont > div {
+  padding: 15px 10px;
+}
+.loginReg-cont > div:nth-child(1) {
+  /*margin-left:-50px;*/
+  cursor: pointer;
+}
+
+/* 右边登录注册 */
+.loginReg-cont > div:nth-child(2) {
+  margin-top: 15px;
+  margin-right: 10px;
+}
+/* 按钮 */
+
+.loginReg_right .input_btn {
+  width: 100px;
+  height: 40px;
+  line-height: 15px;
+  border: 1px solid #f26921;
+  background: #ffe400;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  color: #000;
+}
+
+.loginReg_right .input_btn.reg_btn,
+.loginReg_right .input_btn.login_btn {
+  color: #fff;
+  margin-left: 15px;
+  background: #d50000;
+}
+
+/* 弹出窗 */
+
+.el-dialog.el-dialog--center {
+  width: 20%;
+  border-radius: 20px;
+  background: #e9ecef;
+}
+
+.el-dialog.el-dialog--center div.el-dialog__header {
+  text-align: left;
+  border-bottom: 2px solid #0047aa;
+}
+
+.el-dialog--center .el-dialog__header {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+/* 快速登录 */
+.el-dialog--center div.el-dialog__footer {
+  text-align: left;
+}
+
+.el-dialog--center div.el-dialog__footer i {
+  font-style: normal;
+  color: #4263eb;
+  cursor: pointer;
+}
+
+/* 免费试玩 表单 */
+
+.form_data {
+  width: 100%;
+}
+.form_data input {
+  height: 40px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding-left: 40px;
+}
+
+.form_data > div {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.try_acount {
+  position: relative;
+}
+.try_acount::before,
+.try_password::before {
+  display: inline-block;
+  content: "";
+  width: 25px;
+  height: 25px;
+  background: url("../../image/acount.png") no-repeat center / cover;
+  position: absolute;
+  top: 7px;
+  left: 5px;
+}
+
+.try_password::before {
+  background: url("../../image/password.png") no-repeat center / cover;
+}
+.yaoqing_ma::before {
+  background: url("../../image/yaoqing_ma.png") no-repeat center / cover;
+}
+.yanzheng_ma {
+  position: relative;
+}
+.yanzheng_ma::before {
+  background: url("../../image/yanzhengma.png") no-repeat center / cover;
+  position: absolute;
+  top: 7px;
+  left: 5px;
+}
+
+.yanzheng_ma > em {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: url("../../image/click_fresh.png") no-repeat center / cover;
+  vertical-align: middle;
+  margin-top: -5px;
+  cursor: pointer;
+}
+
+.try_password i {
+  display: inline-block;
+  content: "";
+  width: 25px;
+  height: 25px;
+  background: url("../../image/password_eyes.png") no-repeat center / cover;
+  position: absolute;
+  top: 7px;
+  right: 5px;
+  cursor: pointer;
+}
+
+.try_password i.blue {
+  background: url("../../image/blue_password_eyes.png") no-repeat center / cover;
+}
+
+/* 错误提示信息 */
+.tip_message {
+  width: 95%;
+  color: #fff;
+  background: red;
+  padding-left: 20px;
+  opacity: 0;
+  box-sizing: border-box;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+  /* transition:  2s ; */
+}
+.tip_message.manman {
+  opacity: 1;
+  transition: 1s;
+}
+
+@keyframes manman {
+  0% {
+    opacity: 0;
+    /* transform: translateX(-100%) */
+  }
+  100% {
+    opacity: 1;
+    /* transform: translateX(100%) */
+  }
+}
+
+/* 立即试玩 */
+.try_now,
+.return_reg {
+  width: 75%;
+  height: 45px;
+  background: #4263eb;
+  text-align: center;
+  line-height: 45px;
+  color: #fff;
+  margin: 0 auto;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* .try_now.has_click{
+        cursor: 'not-allowed'
+    } */
+
+/* 返回普通注册 */
+
+.return_reg {
+  margin-top: 20px;
+  background: #fff;
+  color: #4263eb;
+}
+
+/* 验证码 */
+
+#code {
+  font-family: Arial, 宋体;
+  font-style: italic;
+  color: green;
+  border: 0;
+  padding: 2px 3px;
+  letter-spacing: 3px;
+  font-weight: bolder;
+}
+
+/* .yanzheng_ma  input{
+        display: inline-block;
+    } */
+
+/* 登录 红绿色提示 */
+.login_acount_text_wrong > i,
+.login_acount_text_true > i {
+  position: relative;
+  padding-left: 10px;
+  font-style: normal;
+}
+.login_acount_text_wrong > i::before,
+.login_acount_text_true > i::before {
+  content: "*";
+  color: red;
+  font-size: 18px;
+  /* margin-bottom:-20px; */
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-40%);
+}
+
+.login_acount_text_wrong > span,
+.login_acount_text_true > span {
+  position: relative;
+}
+.login_acount_text_wrong > span::before,
+.login_acount_text_true > span::before {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  content: "";
+  background: url("../../image/login_account_chacha.png") no-repeat center /
+    cover;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: -20px;
+}
+
+.login_acount_text_true > span::before {
+  background: url("../../image/login_account_duigou.png") no-repeat center /
+    cover;
+}
+
+/* 立即登录，立即注册，免费试玩 */
+.login_now,
+.reg_now,
+.login_try_btn {
+  width: 75%;
+  height: 45px;
+  background: #4263eb;
+  text-align: center;
+  line-height: 45px;
+  color: #fff;
+  margin: 0 auto;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.login_now {
+  margin-bottom: 15px;
+}
+
+.login_try_btn {
+  background: #fff;
+  margin-top: 15px;
+  color: #4263eb;
+}
+
+/* 立即注册样式 */
+.reg_yanzhengma {
+  position: relative;
+}
+.reg_yanzhengma::before {
+  position: absolute;
+  content: "";
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  background: url("../../image/yanzhengma.png") no-repeat center / cover;
+  vertical-align: middle;
+  margin-right: 5px;
+  top: 7px;
+  left: 5px;
+}
+.reg_yanzhengma > em {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: url("../../image/click_fresh.png") no-repeat center / cover;
+  vertical-align: middle;
+  margin-right: 5px;
+  top: 7px;
+  cursor: pointer;
+  /* left:5px; */
+}
+
+/* --------登入后的账户信息列表 */
+.login_account_info ul {
+  float: right;
+  margin-top: 10px;
+}
+.login_account_info ul li {
+  float: left;
+  cursor: pointer;
+  margin-left: 20px;
+  border-left: 1px solid #ccc;
+  padding-left: 20px;
+  color: #0047aa;
+  font-size: 15px;
+}
+
+.login_account_info ul li:nth-child(1) {
+  border-left: none;
+  margin-left: 0;
+}
+.login_account_info ul li:nth-child(2),
+.login_account_info ul li:nth-child(6) {
+  border-left: 2px solid #ccc;
+}
+
+.login_account_info ul li:nth-child(7) {
+  color: #d50000;
+}
+
+.login_account_info ul li:nth-child(1) > i {
+  font-style: normal;
+  display: inline-block;
+  /* height: 30px; */
+  color: #fff;
+  background: #0047aa;
+  padding: 3px 6px;
+  border-radius: 10px;
+}
+
+.login_account_info ul li::before {
+  content: "";
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  background: url("../../image/click_fresh.png") no-repeat center / cover;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.login_account_info ul li:nth-child(2)::before {
+  background: url("../../image/chongzhi_icon_notry.png") no-repeat center /
+    cover;
+}
+.login_account_info ul li:nth-child(3)::before {
+  background: url("../../image/tikuan_icon_notry.png") no-repeat center / cover;
+}
+.login_account_info ul li:nth-child(4)::before {
+  background: url("../../image/touzhujilu_icon.png") no-repeat center / cover;
+}
+.login_account_info ul li:nth-child(5)::before {
+  background: url("../../image/zhanghumingxi_icon.png") no-repeat center / cover;
+}
+.login_account_info ul li:nth-child(6)::before {
+  background: url("../../image/yonghuzhongxin_icon.png") no-repeat center /
+    cover;
+}
+.login_account_info ul li:nth-child(7)::before {
+  background: url("../../image/anquandengchu_icon.png") no-repeat center / cover;
+}
+
+/* 试玩账户的充值和提现不能使用 */
+.login_account_info ul li.try_play {
+  color: #9a9a9a;
+  cursor: not-allowed;
+}
+
+.login_account_info ul li.try_play::before {
+  background: url("../../image/chongzhi_icon.png") no-repeat center / cover;
+}
+.login_account_info ul li.try_play::before {
+  background: url("../../image/tikuan_icon.png") no-repeat center / cover;
+}
+
+.login_account_info ul li.fresh::before {
+  transform: rotateZ(360deg);
+  transition: all 0.5s;
+}
+</style>
+
+

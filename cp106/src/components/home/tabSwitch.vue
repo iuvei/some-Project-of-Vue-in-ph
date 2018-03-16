@@ -1,0 +1,867 @@
+<template>
+  <div class="home-tab-cont">
+    <div class="home-lot-tabs">
+      <ul>
+        <li v-for="(lot,i) in cp_data_list" :class="{tabActive: lot_active==lot.lot_type_id}" @click="chkTab(lot.lot_type_id,lot)">{{lot.name}}</li>
+      </ul>
+    </div>
+    <div class="home-loadingbar"></div>
+    <div class="quick-bet-body" v-if="lot_active==lot.lot_type_id" v-for="(lot,i) in cp_data_list">
+      <div class="quick-bet-infos">
+        <!-- <img :src="lot.pic" :alt="lot.name"> -->
+        <img src="../../image/cp_icon/js_liuhecai.png" v-if="lot.lot_type_id == 24" :alt="lot.name">
+        <img src="../../image/cp_icon/chongqinshishicai.png" v-if="lot.lot_type_id == 1" :alt="lot.name">
+        <img src="../../image/cp_icon/sanfeishishicai.png" v-if="lot.lot_type_id == 13" :alt="lot.name">
+        <img src="../../image/cp_icon/jing_pk.png" v-if="lot.lot_type_id == 5" :alt="lot.name">
+        <img src="../../image/cp_icon/san_pk.png" v-if="lot.lot_type_id == 14" :alt="lot.name">
+        <img src="../../image/cp_icon/liuhecai.png" v-if="lot.lot_type_id == 23" :alt="lot.name">
+        <img src="../../image/cp_icon/shishile.png" v-if="lot.lot_type_id == 19" :alt="lot.name">
+        <img src="../../image/cp_icon/xin_shishicai.png" v-if="lot.lot_type_id == 7" :alt="lot.name">
+        <img src="../../image/cp_icon/tianjinshishicai1.png" v-if="lot.lot_type_id == 16" :alt="lot.name">
+        <img src="../../image/cp_icon/guangdong.png" v-if="lot.lot_type_id == 6" :alt="lot.name">
+        <img src="../../image/cp_icon/shandong.png" v-if="lot.lot_type_id == 15" :alt="lot.name">
+        <img src="../../image/cp_icon/shanghai.png" v-if="lot.lot_type_id == 17" :alt="lot.name">
+        <img src="../../image/cp_icon/jiangxi.png" v-if="lot.lot_type_id == 18" :alt="lot.name">
+        <img src="../../image/cp_icon/wan_kuaisan.png" v-if="lot.lot_type_id == 8" :alt="lot.name">
+        <img src="../../image/cp_icon/su_kuaisan.png" v-if="lot.lot_type_id == 9" :alt="lot.name">
+        <img src="../../image/cp_icon/gui_kuaisan.png" v-if="lot.lot_type_id == 20" :alt="lot.name">
+        <img src="../../image/cp_icon/3d.png" v-if="lot.lot_type_id == 2" :alt="lot.name">
+        <img src="../../image/cp_icon/pailei3.png" v-if="lot.lot_type_id == 11" :alt="lot.name">
+        <img src="../../image/cp_icon/jing_28.png" v-if="lot.lot_type_id == 22" :alt="lot.name">
+        <img src="../../image/cp_icon/xing_28.png" v-if="lot.lot_type_id == 21" :alt="lot.name">
+        <img src="../../image/cp_icon/fenfenshishicai.png" v-if="lot.lot_type_id == 25" :alt="lot.name">
+        <img src="../../image/cp_icon/js_pk_shi.png" v-if="lot.lot_type_id == 26" :alt="lot.name">
+        <div class="quick-bet-content">
+          <p>{{lot.name}}</p>
+          <p>{{lot.memo}}</p>
+        </div>
+        <div class="quick-bet-bets">
+          <button @click="handMove">
+            <i class="fa fa-hand-pointer-o"></i>
+            <span>手动选号</span>
+          </button>
+          <button @click="toTrend">
+            <i class="fa fa-table"></i>
+            <span>走势图</span>
+          </button>
+        </div>
+      </div>
+      <div class="quick-bet-countdown">
+        距第 {{lot.curr_issue_number}} 期封盘， 还有 {{lot.curr_count_down | transCountTime}}
+      </div>
+      <div class="quick-bet-numberRow">
+        <div class="quick-bet-numbers">
+          <span class="quick-bet-number" v-for="(item,k) in bets_numberfnTex(cq_ssc_arr)">{{item}}</span>
+        </div>
+        <button class="quick-bet-refreshBtn" @click="replaceBet">
+          <i class="fa fa-refresh" :class="{refreshActive: refreshFlag}"></i>
+          换一注
+        </button>
+      </div>
+      <div class="quick-bet-btns">
+        <div class="quick-bet-cont-btn">
+          <div class="quick-bet-multiplier">
+            <button class="quick-bet-multiplierBtn" @click="minus('b')">
+              <i class="el-icon-minus"></i>
+            </button>
+            <strong>{{bet_count}}倍</strong>
+            <button class="quick-bet-multiplierBtn" @click="plus('b')">
+              <i class="el-icon-plus"></i>
+            </button>
+          </div>
+          <div class="quick-bet-multiplier">
+            <button class="quick-bet-multiplierBtn" @click="minus('f')">
+              <i class="el-icon-minus"></i>
+            </button>
+            <strong>{{bet_fessue}}期</strong>
+            <button class="quick-bet-multiplierBtn" @click="plus('f')">
+              <i class="el-icon-plus"></i>
+            </button>
+          </div>
+          <div class="quickBet-amount">{{bet_total}}元</div>
+        </div>
+        <button class="btn-orangeBtn" @click="immediateBet">
+          立即投注
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+
+ import { Tabs} from 'element-ui';
+ import { requestOpt } from '../../api/recommend'
+ import { homeLotCfg , homeTrendCfg } from '../../api/config'
+ import { messageBox } from 'element-ui';
+
+  export default {
+    name:'TabSwitch',
+    data() {
+      return {
+        cq_ssc_arr : [],
+        cp_data_list:[],
+        /*JSON.parse(sessionStorage.getItem('play_list')) || */
+        play_list: [],
+        lotPlayList: JSON.parse(sessionStorage.getItem('lot_list')) || {},
+        homeLotCfg: homeLotCfg,
+        lot_active: 1,
+        timer: null,
+        lotObj: {},
+        refreshFlag: false,
+        bet_price: 2,
+        bet_count: 1,
+        bet_fessue: 0,
+        rotae_ratio: 1,
+      };
+    },
+    computed: {
+      bet_total() {
+        return this.bet_price * (this.bet_count * (this.bet_fessue + 1))
+      },
+      currLotKey() {
+        return  JSON.stringify(this.lotObj)!=='{}'?this.lot_active+'|'+this.homeLotCfg[this.lotObj.code].name+'|'+this.homeLotCfg[this.lotObj.code].code:{}
+      },
+      currLotPplay() {
+        return this.homeLotCfg[this.lotObj.code].p_id+'|'+this.homeLotCfg[this.lotObj.code].p_game
+      },
+      currRote() {
+        // console.log(this.currLotKey)
+        // console.log(this.play_list)
+        // console.log(JSON.parse(sessionStorage.getItem('play_list')))
+
+        if(this.play_list) {
+          return this.currLotKey?!this.play_list[this.currLotKey][this.currLotPplay][0].rates||this.play_list[this.currLotKey][this.currLotPplay][0].rates.length===0?this.play_list[this.currLotKey][this.currLotPplay][0].highest_rate : this.play_list[this.currLotKey][this.currLotPplay][0].rates[this.cq_ssc_arr[0]-(this.homeLotCfg[this.lotObj.code].updown==1?1:0)]:0
+        } else {
+          this.play_list = JSON.parse(sessionStorage.getItem('play_list'))
+          return this.currLotKey?!this.play_list[this.currLotKey][this.currLotPplay][0].rates||this.play_list[this.currLotKey][this.currLotPplay][0].rates.length===0?this.play_list[this.currLotKey][this.currLotPplay][0].highest_rate : this.play_list[this.currLotKey][this.currLotPplay][0].rates[this.cq_ssc_arr[0]-(this.homeLotCfg[this.lotObj.code].updown==1?1:0)]:0
+        }
+      }
+    },
+    mounted(){
+      this.getLotplay()
+      this.rotae_ratio = sessionStorage.getItem('user')? JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate:sessionStorage.getItem('app_config')&&JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate, // 赔率比
+        this.$root.bus.$on('isReload', (flag)=>{
+        if (flag) {
+          this.rotae_ratio = JSON.parse(sessionStorage.getItem('app_config')).proxy_default_rate
+        }
+      })
+      this.$root.bus.$on('isLogin', (flag)=>{
+        if (flag) {
+          this.rotae_ratio = JSON.parse(sessionStorage.getItem('user')).userinfo.return_ratio_rate
+        }
+      })
+      this.getData();
+      this.timer = setInterval(() => {
+        if(this.lotObj.curr_count_down<=0) {
+          this.getData();
+          return false;
+        }
+        this.lotObj.curr_count_down--
+      }, 1000)
+    },
+    methods: {
+      toTrend() {
+//        this.$router.push(homeTrendCfg[this.lot_active].link)
+        window.open('#'+homeTrendCfg[this.lot_active].link)
+      },
+      handMove() {
+        window.sessionStorage.setItem('lotId', this.lot_active)
+        window.sessionStorage.setItem('lotName', this.lotObj.name)
+        this.$router.push('/betcenter')
+      },
+      immediateBet() {
+        this.handMove()
+        let betObj = {
+          lot_type_id: this.lot_active, // 彩票类型ID
+          play_type_id:this.homeLotCfg[this.lotObj.code].c_id,// 子 彩票玩法ID
+          bet_numbers1: this.homeLotCfg[this.lotObj.code].sel_number==1?this.cq_ssc_arr[0]:this.cq_ssc_arr,// 彩票投注号码数组  按位投注二维[[1,2],[3,4]]  一般投注一维[1,2,3]
+          bet_numbers2:this.homeLotCfg[this.lotObj.code].lotteryPosCode, // 彩票投注号码数组[拖码数组或位置数组]
+          bet_amount: this.bet_total,//投注金额
+          bet_count: this.bet_count,//投注倍数
+          bet_rate: this.currRote * this.rotae_ratio,//投注赔率
+          future_issues: this.bet_fessue,//追期数【范围0-50】
+          unit_price: this.bet_price,//单注彩票金额
+
+          bet_type1: this.homeLotCfg[this.lotObj.code].p_game,
+          bet_type2: this.homeLotCfg[this.lotObj.code].c_game,
+          retrun_li: 0,
+          lotteryNum: 1,
+          lotteryPosText: this.homeLotCfg[this.lotObj.code].lotteryPosText,
+          bet_numbers1Text:this.cq_ssc_arr
+        }
+        window.sessionStorage.setItem('home_lot', JSON.stringify(betObj))
+        // console.log(betObj)
+      },
+      chkTab(id, obj) {
+        this.lot_active = id
+        this.lotObj = obj
+        this.replaceBet()
+      },
+      replaceBet() {
+        this.refreshFlag = true
+        this.cq_ssc_arr = [];
+        /*
+        if (this.homeLotCfg[this.lotObj.code].updown==2) {
+          for(var i = this.homeLotCfg[this.lotObj.code].from; i < this.homeLotCfg[this.lotObj.code].sel_number; i++){
+            this.cq_ssc_arr[i] = [parseInt(Math.random() * (this.homeLotCfg[this.lotObj.code].to))]
+          }
+        } else if(this.homeLotCfg[this.lotObj.code].updown==1) {
+          for(var i = this.homeLotCfg[this.lotObj.code].from; i < this.homeLotCfg[this.lotObj.code].sel_number; i++){
+            this.cq_ssc_arr[i] = [Math.ceil(Math.random() * (this.homeLotCfg[this.lotObj.code].to))]
+          }
+        }
+        */
+        // console.log(this.homeLotCfg)
+        // console.log(this.lotObj.code)
+        let from = this.homeLotCfg[this.lotObj.code].from; // 1 0
+        let to   = this.homeLotCfg[this.lotObj.code].to; // 10 9
+        let num  = this.homeLotCfg[this.lotObj.code].sel_number; //
+        let ranArr = []
+          for(let j=0;j<num;j++) {
+            ranArr[j] = [parseInt(Math.random()*(to-from+1)+from)]
+            for (let i=0;i<j;i++) {
+              if(ranArr[i][0] == ranArr[j][0]) {
+                j = j-1;
+                break
+              }
+            }
+          }
+          this.cq_ssc_arr = ranArr
+
+        setTimeout(() => {
+          this.refreshFlag = false
+        },300)
+      },
+      bets_numberfnTex: function (arr) { // 0: [3,15,18]  0: 26
+        if(!arr) return []
+        let res=[];
+        if (typeof(arr[0]) !== 'object') {
+          res = [arr.join(' ')]
+        } else {
+          for (let i=0; i<arr.length; i++) {
+            if (typeof(arr[i]) === 'object') {
+              res.push(arr[i].join(' '))
+            } else {
+              res.push(arr[i])
+            }
+          }
+        }
+        return res
+      },
+      minus(flag) {
+        if (flag == 'b') {
+          if(this.bet_count==1) {
+            this.bet_count = 1
+            return;
+          }
+          this.bet_count--
+        } else {
+          if(this.bet_fessue==0) {
+            this.bet_fessue = 0
+            return;
+          }
+          this.bet_fessue--
+        }
+      },
+      plus(flag) {
+        if (flag == 'b') {
+          this.bet_count++
+        } else {
+          this.bet_fessue++
+        }
+      },
+      getData(){
+            requestOpt.reqnoGetpara('betting_list_v1',
+            {
+                page: '',
+                frequency:'',
+                is_hot : ''
+            },
+            (res)=>{
+              if(res.data.status === 1) {
+              let list = res.data.data.list;
+              this.cp_data_list = list
+              this.cp_data_list.length=5
+//              this.cp_data_list = []
+              for (let i=0;i<list.length;i++) {
+                /*if (list[i].is_hot) { // 热门
+                  this.cp_data_list.push(list[i])
+                }*/
+                /*if(list[i].lot_type_id==1 || list[i].lot_type_id==5 || list[i].lot_type_id==17 || list[i].lot_type_id==23 || list[i].lot_type_id==2) {
+                  this.cp_data_list.push(list[i])
+                }*/
+                /*按顺序取5条*/
+                if (this.lot_active == this.cp_data_list[i].lot_type_id) {
+                  this.lotObj = this.cp_data_list[i]
+                  if (this.cq_ssc_arr.length===0) {
+                    for(var j = 0; j < this.homeLotCfg[this.cp_data_list[i].code].sel_number; j++){
+                      this.cq_ssc_arr[j] = [Math.ceil(Math.random() * (this.homeLotCfg[this.lotObj.code].to))]
+//                      this.cq_ssc_arr.push( parseInt(Math.random() * (this.homeLotCfg[list[i].code].to)) );
+                    }
+                  }
+                }
+              }
+              /*按热门彩种取5条 自定义5条*/
+              /*this.cp_data_list.length=5
+              for(let i=0;i<this.cp_data_list.length;i++) {
+                if (this.lot_active == this.cp_data_list[i].lot_type_id) {
+                  this.lotObj = this.cp_data_list[i]
+                  if (this.cq_ssc_arr.length===0) {
+                    for(var j = 0; j < this.homeLotCfg[this.cp_data_list[i].code].sel_number; j++){
+                      this.cq_ssc_arr[j] = [Math.ceil(Math.random() * (this.homeLotCfg[this.lotObj.code].to))]
+                    }
+                  }
+                }
+              }*/
+              }
+            // console.log(this.cq_ssc_arr);
+            },
+            (err)=>{
+
+            })
+      },
+      getLotplay() { // 获取彩票玩法
+        requestOpt.reqnoGet('play_types', res => {
+          if (res.data.status===1 || res.status == 200) {
+            let list = res.data.data.list
+            this.play_list = list
+            // console.log(list)
+            window.sessionStorage.setItem('play_list',JSON.stringify(list))
+          }else if(res.data.status == 0 && res.data.code == -2){
+                el_tip(res.data.msg + ' 请重新登录');
+                sessionStorage.removeItem('user')
+                setTimeout(()=>{
+                    window.location.reload();
+                    this.$root.bus.$emit("sendData",true);
+                },1000)
+          }else {
+                 el_tip(res.data.msg)
+           }
+        },err => {
+        //   console.log(err)
+        })
+      },
+    },
+    filters:{
+        slic(value){
+            if(!value){ return; }
+            if( (value + '').length > 2 ){
+                value = value.substr(1);
+            }
+             return value;
+        }
+    },
+    beforeRouteLeave(to, from, next) {
+      clearInterval(this.timer)
+      next()
+    }
+  };
+</script>
+
+<style scoped lang="stylus">
+
+    /* 导航样式 */
+    .el-tabs{
+        width:100%;
+        background: #fff;
+        margin-top:10px;
+    }
+
+   .el-tabs__nav-scroll div.el-tabs__nav{
+        width: 100%;
+        display:flex;
+        border-bottom: 2px solid #0047aa
+    }
+    div.el-tabs__nav>div{
+        flex:1;
+        text-align: center;
+       border-right: 1px solid #ddd;
+    }
+
+     div.el-tabs__nav>div:last-child{
+         border-right: none;
+     }
+
+     .el-tabs__item{
+         padding: 0;
+     }
+
+   .el-tabs__active-bar{
+       background: none;
+       height: 0;
+   }
+
+
+
+   div.el-tabs__item.is-active{
+       color: #fff;
+       background:#0047aa;
+   }
+
+   /* 内容样式 */
+
+   .el-tab-cont-item{
+       width: 100%;
+   }
+
+    .el-tab-cont-item-top{
+        display: flex;
+    }
+   .el-tab-cont-item-top>div>img{
+       width:  96px;
+       height: 96px;
+   }
+
+   .el-tab-cont-item-top>div{
+       width: 50%;
+       display: flex;
+       padding-left: 25px;
+   }
+   .el-tab-cont-item-top>div>div{
+       padding-top:25px;
+       padding-left: 20px;
+   }
+    .el-tab-cont-item-top>div>div>p{
+        color: #595959;
+        font-size: 12px;
+    }
+   .el-tab-cont-item-top>div>div>p:nth-child(1){
+       margin-bottom: 5px;
+       font-size: 15px;
+   }
+
+    .el-tab-cont-item-top-right {
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 20px;
+    }
+
+     .el-tab-cont-item-top-right h4{
+         width: 100px;
+         height: 40px;
+         border-radius: 20px;
+         line-height: 40px;
+         border:1px solid #187e00;
+         color: #187e00;
+         text-align: center;
+         cursor: pointer;
+         position: relative;
+         padding-left: 15px;
+
+     }
+
+     .el-tab-cont-item-top-right h4:nth-child(2){
+         /* width: 80px; */
+         margin-left: 20px;
+     }
+
+     .el-tab-cont-item-top-right h4:nth-child(1)::before{
+         content: "";
+         display: inline-block;
+         width:22px;
+         height: 22px;
+         background: url('../../image/sd_xuanze.png') no-repeat center / cover;
+         vertical-align: baseline;
+         position: absolute;
+         top: 50%;
+         margin-top: -12px;
+         left: 15px;
+     }
+
+
+
+       .el-tab-cont-item-top-right h4:nth-child(2)::before{
+
+         content: "";
+         display: inline-block;
+         width:22px;
+         height: 22px;
+         background: url('../../image/zoushitu.png') no-repeat center / cover;
+         vertical-align: baseline;
+         position: absolute;
+         top: 50%;
+         margin-top: -12px;
+         left: 15px;
+       }
+
+       .el-tab-cont-item>p{
+           padding-left: 30px;
+           margin-top:15px;
+          color: #595959;
+       }
+
+        /* 内容 换一注 */
+
+
+        .el-tab-cont-item-mid-left  {
+            width: 92%;
+            height: 60px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            margin-top:10px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0  10px;
+            align-items: center;
+            overflow: hidden;
+        }
+        .el-tab-cont-item-mid-left>ul{
+            display: flex;
+            justify-content: flex-start;
+        }
+        .el-tab-cont-item-mid-left>ul>li{
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            line-height: 36px;
+            background-color: #0047aa;
+            background-image: linear-gradient(145deg,#5ea1ff,#2a83ff 30%,#0067f6 60%,#0047aa);
+            text-align: center;
+            color: #fff;
+            font-weight: 900;
+            margin-right: 5px;
+            animation: qiu_zhuiluo .2s 1 linear;
+        }
+         .el-tab-cont-item-mid-left>ul.active>li{
+             animation: qiu_zhuiluo .2s 1 linear;
+         }
+        @keyframes qiu_zhuiluo {
+            from{
+                transform: translateY(-60%)
+            }
+            to{
+                /* transform: translateY() */
+            }
+        }
+        .el-tab-cont-item-mid-left>h4{
+            width: 102px;
+            height: 36px;
+            background: #0047aa;
+            border-radius: 20px;
+            line-height: 36px;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            text-indent: 30px;
+            cursor: pointer;
+            -moz-user-select:none;
+        }
+
+        .el-tab-cont-item-mid-left>h4::before{
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: url('../../image/huanyizhu.png') no-repeat center / cover;
+            position: absolute;
+            top:50%;
+            transform: translateY(-50%);
+            left:15px;
+        }
+
+        /* 内容 立刻下注 */
+
+        .el-tab-cont-item-mid-right{
+
+            width: 95%;
+            height: 60px;
+            margin: 0 auto;
+            margin-top:15px;
+            display: flex;
+            justify-content: space-between;
+            /* padding: 0  10px; */
+            align-items: center;
+        }
+            /* 元角分 */
+        .el-tab-cont-item-mid-right>ul{
+            display: flex;
+            background:#f2f2f2;
+            height: 36px;
+            align-items: center;
+            padding-left: 10px;
+            border-radius: 20px;
+            padding-right: 2px;
+
+        }
+        .el-tab-cont-item-mid-right>ul>li{
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: #fff;
+            line-height: 24px;
+            text-align: center;
+            background: #feb505;
+            margin-right: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .el-tab-cont-item-mid-right>ul>li.active{
+            background: #d50000;
+            box-shadow: inset 0 2px 2px 0 rgba(67,74,100,.14), inset 0 1px 5px 0 rgba(67,74,100,.12), inset 0 3px 1px -2px rgba(67,74,100,.2);
+        }
+
+        /* 加减倍数 */
+         .el-tab-cont-item-mid-right>div{
+             display: flex;
+             height: 36px;
+             justify-content: space-between;
+             line-height: 36px;
+             margin-left: -30%;
+         }
+
+        .el-tab-cont-item-mid-right>div>div{
+            height: 36px;
+            padding-left: 10px;
+            background:#f2f2f2;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .el-tab-cont-item-mid-right>div>div>span{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #feb505;
+            border-radius: 50%;
+            line-height: 20px;
+            text-align: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 900;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .el-tab-cont-item-mid-right>div>div>strong{
+            margin-right: 8px;
+            color: #545454;
+            font-size: 15px;
+        }
+
+        .el-tab-cont-item-mid-right>div>p{
+            width: 100px;
+            font-weight: 900;
+            font-size: 16px;
+             color: #545454;
+        }
+         .el-tab-cont-item-mid-right>div>p>i{
+            font-style: normal;
+         }
+
+         .el-tab-cont-item-mid-right h4{
+             width: 105px;
+             height: 36px;
+             border: 1px solid #f26921;
+             background-color: #ffe400;
+             line-height: 36px;
+             text-align: center;
+             border-radius: 10px;
+             cursor: pointer;
+         }
+
+  /*rest*/
+  .home-tab-cont {
+    .home-lot-tabs {
+      display flex
+      flex-direction column
+      background #fff
+      box-shadow 0 2px 2px 0 rgba(67,74,100,.14),0 1px 5px 0 rgba(67,74,100,.12),0 3px 1px -2px rgba(67,74,100,.2)
+      padding 0
+      overflow hidden
+      ul {
+        display flex
+        color #000
+        font-size 1rem
+        li {
+          flex 1
+          height 3rem
+          display flex
+          justify-content center
+          color #000
+          line-height 3rem
+          cursor pointer
+          font-size: 16px;
+          &:not(:last-child) {
+            border-right 1px solid #f2f2f2
+          }
+          &.tabActive {
+            background #0047aa
+            color #fff
+            cursor default
+          }
+        }
+      }
+    }
+    .home-loadingbar {
+      min-height 2px
+      background #0047aa
+      overflow hidden
+      width 100%
+    }
+    .quick-bet-body {
+      padding 1rem
+      background #fff
+      .quick-bet-infos {
+        display flex
+        flex-direction row
+        align-items center
+        margin-bottom 1rem
+        img {
+          width 6rem
+          height 6rem
+          margin-right 1rem
+          border-radius 50%
+        }
+        .quick-bet-content {
+          display flex
+          flex-direction column
+          flex 1
+          p {
+            color #777
+            &:first-child {
+              font-size 1rem
+            }
+            &:last-child {
+              font-size .85rem
+            }
+          }
+        }
+        .quick-bet-bets {
+          display flex
+          align-self flex-start
+          button {
+            padding 0 1rem
+            margin-left 1rem
+            border 1px solid #187e00
+            color #187e00
+            line-height 2.25rem
+            font-size .95rem
+            border-radius 1.125rem
+            i {
+              margin-right .4rem
+              vertical-align middle
+              font-size 1.25rem
+            }
+          }
+        }
+      }
+      .quick-bet-countdown {
+        margin-bottom .5rem
+        padding 0 1rem
+        font-size .95rem
+        color #777
+      }
+      .quick-bet-numberRow {
+        display flex
+        flex-direction row
+        align-items center
+        padding .5rem .5rem 0
+        border 1px solid #ccc
+        border-radius 3rem
+        .quick-bet-numbers {
+          display flex
+          flex 1
+          align-items center
+          .quick-bet-number {
+            display inline-block
+            width 2.5rem
+            height 2.5rem
+            margin 0 .25rem .5rem 0
+            background-color #0047aa
+            background-image linear-gradient(145deg, #5ea1ff, #2a83ff 30%, #0067f6 60%,#0047aa)
+            color #fff
+            font-size 1.2rem
+            font-weight 600
+            line-height 2.5rem
+            text-align center
+            border-radius 50%
+            animation dropdown .3s 1 cubic-bezier(.4,0,.2,1)
+          }
+        }
+        .quick-bet-refreshBtn {
+          height 2.5rem
+          padding 0 1rem
+          margin 0 0 .5rem .5rem
+          color #fff
+          font-size 1rem
+          border-radius 2.5rem
+          background #0047aa
+          i {
+            font-size 1.2rem
+            vertical-align baseline
+            margin-right .5rem
+          }
+        }
+      }
+      .quick-bet-btns {
+        display flex
+        align-items center
+        margin-top 1rem
+        .quick-bet-cont-btn {
+          display flex
+          flex-direction row
+          flex 1
+          align-items center
+          .quick-bet-multiplier {
+            display flex
+            flex-direction row
+            align-items center
+            margin 0 1rem
+            height 2.5rem
+            padding 0 .5rem
+            background #f2f2f2
+            border-radius 1.25rem
+            .quick-bet-multiplierBtn {
+              width 1.5rem
+              height 1.5rem
+              line-height 1
+              color #fff
+              background #feb505
+              border-radius 50%
+              i {
+                position relative
+                left -.15rem
+              }
+              &:first-child {
+                margin-right .5rem
+              }
+              &:last-child {
+                margin-left .5rem
+              }
+            }
+          }
+          .quickBet-amount {
+            line-height 2.5rem
+            font-weight 700
+          }
+        }
+        .btn-orangeBtn {
+          min-width 6rem
+          height 2.5rem
+          font-size 1rem
+          border 1px solid #ff0021
+          padding 0 .5rem
+          vertical-align middle
+          color #000
+          background #ffe400
+          text-align center
+          border-radius 4px
+        }
+      }
+    }
+  }
+  .refreshActive {
+    transition transform 500ms linear
+    transform rotate(360deg)
+  }
+  @keyframes dropdown {
+    from {
+      transform translateY(-60%)
+    }
+  }
+
+</style>

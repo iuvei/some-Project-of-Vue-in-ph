@@ -1,0 +1,107 @@
+/*自定义样式 element-ui 组件*/
+.el-green
+  .el-message__content
+    color #187e00
+
+.el-messagebox-del
+  border none
+  .el-message-box__header
+    border-bottom: 1px solid #ddd;
+    background: #ff0021;
+    color: #fff;
+    .el-message-box__title
+      color #fff
+    .el-message-box__headerbtn
+      .el-message-box__close
+        color #fff
+        font-size 1.5rem
+  /*.el-message-box__content
+    text-align center
+    .el-message-box__status
+      transform translate(-100px, -50%)*/
+  .el-message-box__btns
+    text-align center
+    .el-button
+      width 48%
+    .el-button--primary
+      border-color #ff0021
+      background #ff0021
+      color #fff
+
+.el-messagebox-tip
+  width auto
+  padding-bottom 0
+  .el-message-box__header
+    padding 0
+
+/*自定义弹层*/
+.def-dialog-container {
+  position fixed;
+  top: 0;
+  z-index: 1;
+  width 100%;
+  height 100%;
+  background rgba(0,0,0,.5);
+}
+
+@keyframes mymove1
+{
+0% {bottom:0;opacity:0}
+50% {bottom:30px;opacity:1}
+100% {bottom:50px;opacity:0}
+}
+.def-dialog{
+  position: absolute;
+  left: 50%;
+  top:50%;
+  margin-left -250px
+  z-index: 2;
+  width: 500px;
+  height 200px
+  background: #fff;
+  color: #000;
+  text-align: center;
+  font-size: 1.3rem;
+  border-radius: 3px;
+  transition: bottom 2s;
+  /*animation mymove1 20s;*/
+  .def-header {
+    display flex
+    justify-content space-between
+    align-items center
+    padding .5rem 1rem
+    background #ff0021
+    color #fff
+  }
+  .def-body {
+    padding 3rem 0
+  }
+  .def-footer {
+    position absolute
+    bottom 0
+    width 100%
+    padding 1rem 0
+    border-top 1px solid #ccc
+    button {
+      min-width 35%
+      padding .5rem 0
+      font-size 1.5rem
+      border-radius 3px
+      &:nth-child(1) {
+        border 1px solid #eaeaea
+        margin-right 5px
+      }
+      &:nth-child(2) {
+        margin-left 5px
+        border 1px solid #ff0021
+        background #ff0021
+        color #fff
+      }
+    }
+  }
+}
+
+
+
+
+
